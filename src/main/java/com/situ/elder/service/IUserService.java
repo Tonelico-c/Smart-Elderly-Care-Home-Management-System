@@ -1,7 +1,9 @@
 package com.situ.elder.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.situ.elder.pojo.query.UserQuery;
 
 /**
  * <p>
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IUserService extends IService<User> {
 
+    IPage<User> list(UserQuery userQuery);
 }
