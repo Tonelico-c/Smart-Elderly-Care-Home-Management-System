@@ -57,7 +57,7 @@ public class UserController {
      * 修改用户
      * PUT /users
      */
-    @PutMapping
+    @PutMapping("/{id}")
     public Result update(@RequestBody User user) {
         userService.updateById(user);
         return Result.ok("修改成功");
