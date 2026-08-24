@@ -20,7 +20,12 @@
           total.value = result.data.total
       })
   }*/
+
+  // 时间范围
+  const createTimeRange = ref([])
   const loadData = () => {
+    userQuery.value.beginCreateTime = createTimeRange.value?.[0];
+    userQuery.value.endCreateTime = createTimeRange.value?.[1];
     userApi.list(userQuery.value).then(result => {
       list.value = result.data.records
       total.value = result.data.total
@@ -131,6 +136,7 @@
     }
   }
 
+  // 状态切换
   const handleSwitchChange = (row) => {
     const user = {}
     user.id = row.id
@@ -156,10 +162,20 @@
     </template>
     <el-form :inline="true">
       <el-form-item label="名字">
-        <el-input v-model="userQuery.name" placeholder="请输入名字" clearable style="width: 200px"/>
+        <el-input v-model="userQuery.name" placeholder="请输入名字" clearable style="width: 150px"/>
       </el-form-item>
       <el-form-item label="邮箱">
-        <el-input v-model="userQuery.email" placeholder="请输入邮箱" clearable style="width: 200px"/>
+        <el-input v-model="userQuery.email" placeholder="请输入邮箱" clearable style="width: 150px"/>
+      </el-form-item>
+      <el-form-item label="创建时间">
+        <el-date-picker
+            v-model="createTimeRange"
+            type="datetimerange"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSearch">搜索</el-button>
