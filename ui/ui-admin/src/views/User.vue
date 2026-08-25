@@ -186,7 +186,7 @@
         <el-button type="primary" @click="onSearch">搜索</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="list" border style="width: 100%" ref="multipleTableRef" @selection-change="handleSelectionChange">
+    <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
       <el-table-column fixed prop="id" label="ID"/>
       <el-table-column prop="name" label="名字"/>
@@ -198,7 +198,7 @@
           <img :src="row.avatar" alt="头像" style="width: 40px; height: 50px">
         </template>
       </el-table-column>
-      <el-table-column prop="status" label="状态">
+      <el-table-column prop="status" label="状态" width="100px">
         <template #default="{row}">
           <el-switch
               v-model="row.status"
@@ -213,7 +213,7 @@
         </template>
       </el-table-column>
       <!-- <el-table-column prop="avatar" label="头像"/> -->
-      <el-table-column prop="createTime" label="创建时间"/>
+      <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
