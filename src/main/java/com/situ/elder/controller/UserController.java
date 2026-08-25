@@ -8,6 +8,7 @@ import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.service.IUserService;
 import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +39,8 @@ public class UserController {
         if(!dbUser.getPassword().equals(user.getPassword())){
             return Result.error("密码错误");
         }
-        if(dbUser.getStatus() != 1){
+        // 登录成功后，判断用户是否被禁用
+        if(dbUser.getStatus() == 0){
             return Result.error("该用户已被禁用");
         }
 

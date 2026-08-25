@@ -4,9 +4,12 @@
   import {User,Lock} from "@element-plus/icons-vue";
 
   import {useRouter} from 'vue-router'
+  const router = useRouter()
+
   import userApi from "@/api/user.js";
   import {ElMessage} from "element-plus";
-  const router = useRouter()
+  import {useTokenStore} from '@/store/token.js'
+  const tokenStore = useTokenStore();
   const user = ref({
     name: '',
     password: ''
@@ -16,12 +19,25 @@
     userApi.login(user.value).then(result => {
       if (result.code === 1) {
         ElMessage.success(result.msg)
+        tokenStore.setToken(result.data)
         router.push({path: '/'})
       } else {
         ElMessage.error(result.msg)
       }
     })
   }
+
+  //表单校验模型
+  const rules = ref({
+    name: [
+      {required: true, message: '请输入用户名', trigger: 'blur'},
+      {min: 4, max: 16, message: '用户名的长度必须为5~16位', trigger: 'blur'}
+    ],
+    password: [
+      {required: true, message: '请输入密码', trigger: 'blur'},
+      {min: 3, max: 16, message: '密码长度必须为3~16位', trigger: 'blur'}
+    ]
+  })
 </script>
 
 <template>

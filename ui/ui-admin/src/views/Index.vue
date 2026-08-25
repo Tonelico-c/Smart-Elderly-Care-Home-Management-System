@@ -10,8 +10,12 @@
     CaretBottom
   } from '@element-plus/icons-vue'
   import avatar from '@/assets/default.png'
+
+  import {useTokenStore} from '@/store/token.js'
+  const tokenStore = useTokenStore();
   //条目被点击后,调用的函数
   import {useRouter} from 'vue-router'
+  import {ElMessageBox} from "element-plus";
   const router = useRouter();
   const handleCommand = (command) => {
     //判断指令
@@ -21,6 +25,23 @@
       //路由
       router.push('/user/' + command)
     }
+  }
+
+  const loginOut = () => {
+    //退出登录
+    ElMessageBox.confirm('确定要退出登录吗？'
+      , {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      tokenStore.removeToken()
+      router.push('/login')
+    }).catch(()=>{
+
+    })
+
   }
 </script>
 
@@ -77,7 +98,7 @@
     <el-container>
       <!-- 头部区域 -->
       <el-header>
-        <div><strong>智慧养老后台管理系统{{ zhansgan }}</strong></div>
+        <div><strong>智慧养老后台管理系统{{ zhangsan }}</strong></div>
         <!-- 下拉菜单 -->
         <!-- command: 条目被点击后会触发,在事件函数上可以声明一个参数,接收条目对应的指令 -->
         <el-dropdown placement="bottom-end" @command="handleCommand">
@@ -92,7 +113,7 @@
               <el-dropdown-item command="info" :icon="User">基本资料</el-dropdown-item>
               <el-dropdown-item command="avatar" :icon="Crop">更换头像</el-dropdown-item>
               <el-dropdown-item command="resetPassword" :icon="EditPen">重置密码</el-dropdown-item>
-              <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
+              <el-dropdown-item command="logout" :icon="SwitchButton" @click="loginOut">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
