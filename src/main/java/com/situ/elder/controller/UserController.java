@@ -1,13 +1,18 @@
 package com.situ.elder.controller;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.service.IUserService;
+import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -23,6 +28,28 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
+
+    @PostMapping("/login")
+    public Result<String> login(@RequestBody User user){
+        User dbUser = userService.getOne(new QueryWrapper<User>().eq("name",user.getName()));
+        if(dbUser == null){
+            return Result.error("用户名不存在");
+        }
+        if(!dbUser.getPassword().equals(user.getPassword())){
+            return Result.error("密码错误");
+        }
+        if(dbUser.getStatus() != 1){
+            return Result.error("用户已被禁用");
+        }
+
+        //生成token
+        Map<String, Object> map = new HashMap<>();
+        map.put("name",dbUser.getName());
+        map.put("password",dbUser.getPassword());
+        String token = JwtUtil.createToken(map);
+        return Result.ok("登录成功",token);
+    }
+
 
     /**
      * 分页查询用户列表
