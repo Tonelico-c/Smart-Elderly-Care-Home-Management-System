@@ -63,6 +63,14 @@ public class UserController {
         return Result.ok(page);
     }
 
+    @GetMapping("/userInfo")
+    public Result<User> userInfo(@RequestHeader("Authorization") String token){
+        Map<String, Object> map = JwtUtil.parseToken(token);
+        String username = (String) map.get("name");
+        User user = userService.getOne(new QueryWrapper<User>().eq("name", username));
+        user.setPassword("");
+        return Result.ok(user);
+    }
     /**
      * 根据ID查询用户
      * GET /users/1

@@ -23,6 +23,9 @@ const userApi = {
     },
     login(user) {
         return request.post("/users/login", user)
+    },
+    userInfo(){
+        return request.get("/users/userInfo")
     }
 }
 

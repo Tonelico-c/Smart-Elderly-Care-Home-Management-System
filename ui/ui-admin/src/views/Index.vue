@@ -16,33 +16,39 @@
   //条目被点击后,调用的函数
   import {useRouter} from 'vue-router'
   import {ElMessageBox} from "element-plus";
-  const router = useRouter();
+  const router = useRouter()
+
+  import {useAdminInfoStore} from '@/store/userInfo.js'
+  import userApi from "@/api/user.js";
+  const userInfoStore = useAdminInfoStore();
   const handleCommand = (command) => {
     //判断指令
     if (command === 'logout') {
       //退出登录
+      ElMessageBox.confirm('确定要退出登录吗？'
+        , {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).then(() => {
+        tokenStore.removeToken()
+        userInfoStore.removeUserInfo()
+        router.push('/login')
+      }).catch(()=>{
+
+      })
     } else {
       //路由
       router.push('/user/' + command)
     }
   }
 
-  const loginOut = () => {
-    //退出登录
-    ElMessageBox.confirm('确定要退出登录吗？'
-      , {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    ).then(() => {
-      tokenStore.removeToken()
-      router.push('/login')
-    }).catch(()=>{
 
-    })
+  userApi.userInfo().then(result=>{
+    userInfoStore.setUserInfo(result.data)
+  })
 
-  }
 </script>
 
 <template>
@@ -103,7 +109,7 @@
         <!-- command: 条目被点击后会触发,在事件函数上可以声明一个参数,接收条目对应的指令 -->
         <el-dropdown placement="bottom-end" @command="handleCommand">
                     <span class="el-dropdown__box">
-                        <el-avatar :src="avatar"/>
+                        <el-avatar :src="userInfoStore.user.avatar?userInfoStore.user.avatar:avatar"/>
                         <el-icon>
                             <CaretBottom/>
                         </el-icon>
@@ -113,7 +119,7 @@
               <el-dropdown-item command="info" :icon="User">基本资料</el-dropdown-item>
               <el-dropdown-item command="avatar" :icon="Crop">更换头像</el-dropdown-item>
               <el-dropdown-item command="resetPassword" :icon="EditPen">重置密码</el-dropdown-item>
-              <el-dropdown-item command="logout" :icon="SwitchButton" @click="loginOut">退出登录</el-dropdown-item>
+              <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
