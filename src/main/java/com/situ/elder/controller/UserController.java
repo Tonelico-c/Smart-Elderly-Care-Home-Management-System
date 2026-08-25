@@ -39,7 +39,7 @@ public class UserController {
             return Result.error("密码错误");
         }
         if(dbUser.getStatus() != 1){
-            return Result.error("用户已被禁用");
+            return Result.error("该用户已被禁用");
         }
 
         //生成token
