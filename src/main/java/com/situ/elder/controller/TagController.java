@@ -4,6 +4,7 @@ package com.situ.elder.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Tag;
 import com.situ.elder.pojo.query.TagQuery;
+import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.ITagService;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,13 @@ public class TagController {
         Tag tag = tagService.getById(id);
         return Result.ok(tag);
     }
+
+    @GetMapping("/selectRelatedElder/{tagId}")
+    public Result<List<ElderVo>> selectRelatedElder(@PathVariable Long tagId){
+        List<ElderVo> elderVos = tagService.selectRelatedElder(tagId);
+        return Result.ok(elderVos);
+    }
+
     @DeleteMapping("/{id}")
     public Result deleteById(@PathVariable Long id){
         tagService.removeById(id);

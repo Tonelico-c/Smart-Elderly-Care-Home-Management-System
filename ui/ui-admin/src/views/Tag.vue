@@ -103,6 +103,16 @@
       })
     }
   }
+
+  const dialogElderVisible = ref(false)
+  const assignElder = ref([])
+  const showRelatedElder = row => {
+    tag.value = row
+    tagApi.selectRelatedElder(row.id).then(result => {
+      assignElder.value = result.data
+      dialogElderVisible.value = true
+    })
+  }
 </script>
 
 <template>
@@ -133,14 +143,15 @@
     </el-form>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column fixed prop="id" label="ID"/>
-      <el-table-column prop="code" label="标签编码"/>
-      <el-table-column prop="name" label="标签名称"/>
-      <el-table-column prop="createTime" label="创建时间" width="200px"/>
-      <el-table-column align="center" width="200px" fixed="right" label="操作">
+      <el-table-column fixed prop="id" label="ID" width="50"/>
+      <el-table-column prop="code" label="标签编码" />
+      <el-table-column prop="name" label="标签名称" />
+      <el-table-column prop="createTime" label="创建时间" width="200"/>
+      <el-table-column align="center" width="300" fixed="right" label="操作" >
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
+          <el-button size="small" type="success" @click="showRelatedElder(row)">相关老人</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -170,6 +181,41 @@
         <el-button type="primary" @click="addOrUpdate">
           确认
         </el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <!--相关老人弹出框-->
+  <el-dialog v-model="dialogElderVisible" :title="`标签【${tag.name}】的相关老人`" width="900" :lock-scroll="false">
+    <el-table :data="assignElder" border style="width: 100%">
+      <el-table-column prop="id" label="ID" width="70"/>
+      <el-table-column prop="name" label="姓名" width="100"/>
+      <el-table-column prop="phone" label="手机号" width="130"/>
+      <el-table-column prop="idCardNo" label="身份证号" width="180"/>
+      <el-table-column prop="birthday" label="出生日期" width="120"/>
+      <el-table-column label="状态" width="90">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 1 ? 'success' : 'info'">
+            {{ {0: '禁用', 1: '启用', 2: '请假', 3: '退住中', 4: '入住中', 5: '已退住'}[row.status] }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="address" label="家庭住址" show-overflow-tooltip/>
+      <el-table-column label="标签" min-width="150">
+        <template #default="{ row }">
+          <el-tag
+              v-for="item in row.tags"
+              :key="item.id"
+              style="margin-right: 5px"
+              :type="item.id === tag.id ? 'success' : 'primary'"
+          >
+            {{ item.name }}
+          </el-tag>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogElderVisible = false">关闭</el-button>
       </div>
     </template>
   </el-dialog>

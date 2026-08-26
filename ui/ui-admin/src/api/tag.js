@@ -19,6 +19,9 @@ const tagApi = {
     },
     selectById(id){
         return request.get(`/tags/${id}`)
+    },
+    selectRelatedElder(tagId){
+        return request.get(`/tags/selectRelatedElder/${tagId}`)
     }
 }
 
