@@ -27,7 +27,7 @@ public class MPGenerator {
         // 代码生成目录
         String projectPath = System.getProperty("user.dir");
         System.out.println(projectPath);// D:\MyIdeaProject\mybatis-plus
-        globalConfigBuilder.outputDir(projectPath + "/src/main/java");
+        globalConfigBuilder.outputDir(projectPath + "" + "/src/main/java");
         // 作者
         globalConfigBuilder.author("Gao");
         // 实体属性Swagger2注解

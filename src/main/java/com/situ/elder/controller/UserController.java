@@ -3,6 +3,7 @@ package com.situ.elder.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.situ.elder.pojo.DTO.UserPasswordDTO;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.service.IUserService;
@@ -68,7 +69,7 @@ public class UserController {
 //        String username = (String) map.get("name");
         Integer id = (Integer) map.get("id");
         User user = userService.getById(id);
-        user.setPassword("");
+        user.setPassword(null);
         return Result.ok(user);
     }
     /**
@@ -98,6 +99,24 @@ public class UserController {
     public Result update(@RequestBody User user) {
         userService.updateById(user);
         return Result.ok("修改成功");
+    }
+
+    @PutMapping("/resetPassword")
+    public Result resetPassword(@RequestHeader("Authorization") String token,@RequestBody UserPasswordDTO userPasswordDTO){
+        Map<String, Object> map = JwtUtil.parseToken(token);
+        Integer id = (Integer) map.get("id");
+        User user = userService.getById(id);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        if (!user.getPassword().equals(userPasswordDTO.getOldPassword())) {
+            return Result.error("原密码错误");
+        }
+        User newUser =  new User();
+        newUser.setId(user.getId());
+        newUser.setPassword(userPasswordDTO.getNewPassword());
+        userService.updateById(newUser);
+        return Result.ok("密码修改成功");
     }
 
     /**

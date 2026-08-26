@@ -26,6 +26,9 @@ const userApi = {
     },
     userInfo(){
         return request.get("/users/userInfo")
+    },
+    resetPassword(userPasswordDTO){
+        return request.put("/users/resetPassword", userPasswordDTO)
     }
 }
 

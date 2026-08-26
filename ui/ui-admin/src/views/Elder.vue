@@ -212,6 +212,7 @@
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
+          <el-button size="small" type="success" @click="addTags(row.id)">标签</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -231,9 +232,6 @@
     <el-form :model="elder">
       <el-form-item label="名字" :label-width="80">
         <el-input v-model="elder.name" autocomplete="off" />
-      </el-form-item>
-      <el-form-item label="密码" :label-width="80">
-        <el-input v-model="elder.password" autocomplete="off" />
       </el-form-item>
       <el-form-item label="身份证号" :label-width="80">
         <el-input v-model="elder.idCardNo" autocomplete="off" />

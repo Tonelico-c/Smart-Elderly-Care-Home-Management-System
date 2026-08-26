@@ -44,8 +44,10 @@
     } else if(command === 'updateUserinfo'){
       dialogFormVisible.value = true
       Object.assign(user.value, userInfoStore.user)
-    } else if(command === 'resetPassword'){
-      router.push('/user/resetPassword')
+    } else if (command === 'resetPassword'){
+      dialogResetPasswordDialog.value = true
+      userPasswordDTO.value = {}
+      // resetForm.value.resetFields()
     } else {
       router.push('/user/' + command)
     }
@@ -58,6 +60,63 @@
     })
   }
   getUserInfo()
+
+  // 重置密码的表单数据
+  const userPasswordDTO = ref({
+    oldPassword: '',
+    newPassword: '',
+    reNewPassword: ''
+  })
+  const dialogResetPasswordDialog = ref(false)
+  const resetForm = ref()
+  //自定义确认密码的校验函数
+  const rePasswordValid = (rule, value, callback) => {
+    if (value == null || value === '') {
+      return callback(new Error('请再次确认密码'))
+    }
+    //响应式对象要：registerData.value才能拿到值
+    if (userPasswordDTO.value.newPassword !== value) {
+      return callback(new Error('两次输入密码不一致'))
+    }
+    callback()
+  }
+
+  const rules = ref({
+    oldPassword: [
+      {required: true, message: '请输入密码', trigger: 'blur'},
+      {min: 3, max: 16, message: '密码长度必须为3~16位', trigger: 'blur'}
+    ],
+    newPassword: [
+      {required: true, message: '请输入密码', trigger: 'blur'},
+      {min: 3, max: 16, message: '密码长度必须为3~16位', trigger: 'blur'}
+    ],
+    reNewPassword: [
+      {required: true, message: '请输入密码', trigger: 'blur'},
+      {validator: rePasswordValid, trigger: 'blur' }
+    ]
+  })
+
+  const resetPassword = async (formEl) => {
+    if (!formEl) return
+    await formEl.validate((valid, fields) => {
+      if (valid) {
+        userApi.resetPassword(userPasswordDTO.value).then(result => {
+          if (result.code === 1) {
+            ElMessage.success(result.msg)
+            dialogResetPasswordDialog.value = false
+            tokenStore.removeToken();
+            userInfoStore.removeUserInfo();
+            // 跳转到登录
+            router.push('/login')
+          } else {
+            ElMessage.error(result.msg)
+          }
+        })
+      } else {
+        ElMessage.error('表单验证失败');
+      }
+    })
+  }
 
   // 头像上传成功
   const handleAvatarSuccess = (res) => {
@@ -189,6 +248,28 @@
       <div class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button type="primary" @click="updateUserInfo">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <el-dialog  v-model="dialogResetPasswordDialog" title="重置密码" width="500" :lock-scroll="false">
+    <el-form ref="resetForm" :rules="rules" :model="userPasswordDTO">
+      <el-form-item prop="oldPassword" label="原密码" :label-width="100">
+        <el-input v-model="userPasswordDTO.oldPassword" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item prop="newPassword" label="新密码" :label-width="100">
+        <el-input v-model="userPasswordDTO.newPassword" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item prop="reNewPassword" label="重复新密码" :label-width="100">
+        <el-input v-model="userPasswordDTO.reNewPassword" autocomplete="off"/>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogResetPasswordDialog = false">取消</el-button>
+        <el-button type="primary" @click="resetPassword(resetForm)">
           确认
         </el-button>
       </div>
