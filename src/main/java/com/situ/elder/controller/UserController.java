@@ -8,7 +8,6 @@ import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.service.IUserService;
 import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

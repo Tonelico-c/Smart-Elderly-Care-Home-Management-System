@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.generator.fill.Column;
 
 public class MPGenerator {
     //需要配置
-    private static final String dbTables = "user";             //需要生成的表名
+    private static final String dbTables = "elder";             //需要生成的表名
     private static final Boolean enableSwagger = false;                 //是否开启Swagger
 
     public static void main(String[] args) {
@@ -27,7 +27,7 @@ public class MPGenerator {
         // 代码生成目录
         String projectPath = System.getProperty("user.dir");
         System.out.println(projectPath);// D:\MyIdeaProject\mybatis-plus
-        globalConfigBuilder.outputDir(projectPath + "" + "/src/main/java");
+        globalConfigBuilder.outputDir(projectPath + "/src/main/java");
         // 作者
         globalConfigBuilder.author("Gao");
         // 实体属性Swagger2注解

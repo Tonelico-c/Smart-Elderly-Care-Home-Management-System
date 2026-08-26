@@ -1,6 +1,7 @@
 <script setup>
-  import {useAdminInfoStore} from '@/store/userInfo.js'
-  const userInfoStore = useAdminInfoStore();
+
+  import {UserInfoStore} from "@/store/userInfo.js";
+  const userInfoStore = UserInfoStore();
   const user = userInfoStore.user;
 </script>
 

@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia'
 
-export const useAdminInfoStore = defineStore('userInfo', {
+export const UserInfoStore = defineStore('userInfo', {
     //存储数据地方
     state() {
         return {

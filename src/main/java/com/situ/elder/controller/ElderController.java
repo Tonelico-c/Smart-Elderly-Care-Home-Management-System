@@ -1,0 +1,64 @@
+package com.situ.elder.controller;
+
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.situ.elder.pojo.entity.Elder;
+import com.situ.elder.pojo.query.ElderQuery;
+import com.situ.elder.service.IElderService;
+import com.situ.elder.utils.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+
+/**
+ * <p>
+ * 老人表 前端控制器
+ * </p>
+ *
+ * @author Gao
+ * @since 2026-08-25
+ */
+@RestController
+@RequestMapping("/elders")
+public class ElderController {
+
+    @Autowired
+    private IElderService elderService;
+
+    @GetMapping
+    public Result<IPage<Elder>> list(ElderQuery elderQuery){
+        IPage<Elder> page = elderService.list(elderQuery);
+        return Result.ok(page);
+    }
+
+    @GetMapping("/{id}")
+    public Result<Elder> get(@PathVariable Integer id){
+        Elder elder = elderService.getById(id);
+        return Result.ok(elder);
+    }
+
+    @PostMapping
+    public Result<Elder> add(@RequestBody Elder elder){
+        elderService.save(elder);
+        return Result.ok("添加成功");
+    }
+
+    @PutMapping("/{id}")
+    public Result<Elder> update(@RequestBody Elder elder){
+        elderService.updateById(elder);
+        return Result.ok("修改成功");
+    }
+
+    @DeleteMapping("/{id}")
+    public Result delete(@PathVariable Integer id){
+        elderService.removeById(id);
+        return Result.ok("删除成功");
+    }
+    @DeleteMapping
+    public Result batchDelete(@RequestBody Long[] ids){
+        elderService.removeBatchByIds(Arrays.asList(ids));
+        return Result.ok("删除成功");
+    }
+}
+

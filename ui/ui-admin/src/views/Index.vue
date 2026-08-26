@@ -17,10 +17,9 @@
   import {useRouter} from 'vue-router'
   import {ElMessageBox} from "element-plus";
   const router = useRouter()
-
-  import {useAdminInfoStore} from '@/store/userInfo.js'
   import userApi from "@/api/user.js";
-  const userInfoStore = useAdminInfoStore();
+  import {UserInfoStore} from '@/store/userInfo.js'
+  const userInfoStore = UserInfoStore();
   const handleCommand = (command) => {
     //判断指令
     if (command === 'logout') {
@@ -38,13 +37,16 @@
       }).catch(()=>{
 
       })
+    } else if(command === 'avatar') {
+        router.push('/user/avatar')
+    } else if(command === 'resetPassword'){
+      router.push('/user/resetPassword')
     } else {
-      //路由
       router.push('/user/' + command)
     }
   }
 
-
+  // 获取用户信息
   userApi.userInfo().then(result=>{
     userInfoStore.setUserInfo(result.data)
   })
