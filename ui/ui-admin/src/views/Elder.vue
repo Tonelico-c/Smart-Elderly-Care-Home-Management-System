@@ -6,8 +6,8 @@
   import {ElMessage, ElMessageBox} from "element-plus";
   import {useTokenStore} from '@/store/token.js'
   const tokenStore = useTokenStore();
-  const list = ref([]);
-  const total = ref(0);
+  const list = ref([])
+  const total = ref(0)
 
   const elderQuery=ref({
     name:'',
@@ -89,7 +89,6 @@
     dialogFormVisible.value = true
     elder.value = {}
   }
-
   const showUpdateDialog = (id) => {
     title.value = '修改'
     dialogFormVisible.value = true
@@ -97,7 +96,6 @@
       elder.value = result.data
     })
   }
-  // 添加、修改
   const addOrUpdate = () => {
     if(elder.value.id){
       elderApi.update(elder.value.id,elder.value).then(result => {

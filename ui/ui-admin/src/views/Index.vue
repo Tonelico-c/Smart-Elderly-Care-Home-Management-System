@@ -157,6 +157,12 @@
           </el-icon>
           <span>老人管理</span>
         </el-menu-item>
+        <el-menu-item index="/tag">
+          <el-icon>
+            <Crop/>
+          </el-icon>
+          <span>标签管理</span>
+        </el-menu-item>
         <el-sub-menu>
           <template #title>
             <el-icon>

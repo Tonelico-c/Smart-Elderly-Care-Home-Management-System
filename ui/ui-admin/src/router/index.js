@@ -8,6 +8,7 @@ import Login from '@/views/Login.vue'
 import User from '@/views/User.vue'
 import Elder from '@/views/Elder.vue'
 import UserInfo from "@/views/UserInfo.vue";
+import Tag from "@/views/Tag.vue";
 
 
 //创建路由器
@@ -22,7 +23,8 @@ const router = createRouter({
             path: '/', component: Index, children: [
                 {path: '/user', component: User},
                 {path: '/elder', component: Elder},
-                {path: '/user/info', component: UserInfo}
+                {path: '/user/info', component: UserInfo},
+                {path: '/tag', component: Tag}
             ]
         }
     ]
