@@ -161,16 +161,13 @@
   }
   // 分配标签
   const assignTag = () => {
-    const dataDTO = {
-      elderId: elder.value.id,
-      assignedTagIdList: assignedTagIdList.value
-    };
-    const tagIds = assignedTagIdList.value.join(',');
     // /elders/assignTag?elderId=1&tagIds=1,2,3
+    const tagIds = assignedTagIdList.value.join(',');
     elderApi.assignTag(elder.value.id, tagIds).then((result) => {
       if (result.code === 1) {
         ElMessage.success(result.msg);
         dialogTagVisible.value = false;
+        loadData();
       } else {
         ElMessage.error(result.msg);
       }
@@ -231,6 +228,16 @@
                 :value="item.value"
             />
           </el-select>
+        </template>
+      </el-table-column>
+      <el-table-column prop="tags" label="标签" width="200">
+        <template #default="{ row }">
+          <el-tag
+              v-for="tag in (row.tags || [])"
+              :key="tag.id"
+              type="primary"
+              style="margin: 2px"
+          >{{ tag.name }}</el-tag>
         </template>
       </el-table-column>
       <!-- <el-table-column prop="avatar" label="头像"/> -->
@@ -305,13 +312,13 @@
       </div>
     </template>
   </el-dialog>
-  <!-- 角色分配dialog-->
-  <el-dialog title="标签" v-model="dialogTagVisible" width="40%">
+  <!-- 标签分配dialog-->
+  <el-dialog title="分配标签" v-model="dialogTagVisible" width="40%">
     <el-form ref="form" :model="elder" label-width="80px">
-      <el-form-item label="用户名">
+      <el-form-item label="老人姓名">
         <el-input v-model="elder.name" disabled></el-input>
       </el-form-item>
-      <el-form-item label="角色列表">
+      <el-form-item label="标签列表">
         <el-checkbox-group v-model="assignedTagIdList">
           <el-checkbox v-for="tag in tagList" :key="tag.id" :label="tag.id">{{tag.name}}</el-checkbox>
         </el-checkbox-group>

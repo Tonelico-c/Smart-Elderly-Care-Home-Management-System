@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Elder;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.situ.elder.pojo.query.ElderQuery;
+import com.situ.elder.pojo.vo.ElderVo;
 
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import java.util.Map;
  */
 public interface IElderService extends IService<Elder> {
 
-    IPage<Elder> list(ElderQuery elderQuery);
+    IPage<ElderVo> list(ElderQuery elderQuery);
 
     Map<String, Object> selectAssignedTag(Long elderId);
 

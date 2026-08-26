@@ -4,6 +4,7 @@ package com.situ.elder.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Elder;
 import com.situ.elder.pojo.query.ElderQuery;
+import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.IElderService;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,8 @@ public class ElderController {
     private IElderService elderService;
 
     @GetMapping
-    public Result<IPage<Elder>> list(ElderQuery elderQuery){
-        IPage<Elder> page = elderService.list(elderQuery);
+    public Result<IPage<ElderVo>> list(ElderQuery elderQuery){
+        IPage<ElderVo> page = elderService.list(elderQuery);
         return Result.ok(page);
     }
 
