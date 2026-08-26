@@ -188,13 +188,13 @@
           <img :src="row.avatar" alt="" style="width: 40px; height: 50px">
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="名字"/>
-      <el-table-column prop="password" label="密码"/>
-      <el-table-column prop="idCardNo" label="身份证号"/>
-      <el-table-column prop="birthday" label="出生日期"/>
-      <el-table-column prop="phone" label="电话"/>
-      <el-table-column prop="address" label="家庭地址"/>
-      <el-table-column prop="status" label="状态" width="100px">
+      <el-table-column prop="name" label="名字" width="100"/>
+      <el-table-column prop="password" label="密码" width="100"/>
+      <el-table-column prop="idCardNo" label="身份证号" width="150"/>
+      <el-table-column prop="birthday" label="出生日期" width="120"/>
+      <el-table-column prop="phone" label="电话" width="120"/>
+      <el-table-column prop="address" label="家庭地址" width="150"/>
+      <el-table-column prop="status" label="状态" width="150">
         <template #default="{ row }">
           <el-select v-model="row.status" @change="handleStatusChange(row)">
             <el-option
@@ -232,6 +232,9 @@
     <el-form :model="elder">
       <el-form-item label="名字" :label-width="80">
         <el-input v-model="elder.name" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="密码" :label-width="80">
+        <el-input v-model="elder.password" autocomplete="off" />
       </el-form-item>
       <el-form-item label="身份证号" :label-width="80">
         <el-input v-model="elder.idCardNo" autocomplete="off" />

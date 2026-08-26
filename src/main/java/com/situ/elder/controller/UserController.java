@@ -3,7 +3,7 @@ package com.situ.elder.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.situ.elder.pojo.DTO.UserPasswordDTO;
+import com.situ.elder.pojo.dto.UserPasswordDTO;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.service.IUserService;

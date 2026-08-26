@@ -1,4 +1,4 @@
-package com.situ.elder.pojo.DTO;
+package com.situ.elder.pojo.dto;
 
 import lombok.Data;
 
