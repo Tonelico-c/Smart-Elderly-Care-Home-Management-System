@@ -18,6 +18,9 @@ const elderApi = {
     },
     update(id, elder){
         return request.put(`/elders/${id}`, elder)
+    },
+    selectAssignedTag(elderId){
+        return request.get(`/elders/selectAssignedTag/${elderId}`)
     }
 }
 

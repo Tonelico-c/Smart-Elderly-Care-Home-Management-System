@@ -5,6 +5,8 @@ import com.situ.elder.pojo.entity.Elder;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.situ.elder.pojo.query.ElderQuery;
 
+import java.util.Map;
+
 /**
  * <p>
  * 老人表 服务类
@@ -16,4 +18,6 @@ import com.situ.elder.pojo.query.ElderQuery;
 public interface IElderService extends IService<Elder> {
 
     IPage<Elder> list(ElderQuery elderQuery);
+
+    Map<String, Object> selectAssignedTag(Long elderId);
 }

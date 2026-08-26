@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * <p>
@@ -36,6 +37,12 @@ public class ElderController {
     public Result<Elder> get(@PathVariable Integer id){
         Elder elder = elderService.getById(id);
         return Result.ok(elder);
+    }
+
+    @GetMapping("/selectAssignedTag/{elderId}")
+    public Result<Map<String, Object>> selectAssignedTag(@PathVariable Long elderId){
+        Map<String, Object> map = elderService.selectAssignedTag(elderId);
+        return Result.ok(map);
     }
 
     @PostMapping

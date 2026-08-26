@@ -97,7 +97,7 @@
       elder.value = result.data
     })
   }
-
+  // 添加、修改
   const addOrUpdate = () => {
     if(elder.value.id){
       elderApi.update(elder.value.id,elder.value).then(result => {
@@ -149,6 +149,18 @@
     })
   }
 
+  const dialogTagVisible = ref(false)
+  const tagList = ref([])
+  const assignedTagIdList = ref([])
+
+  const showAssignedTagDialog = (row) => {
+    elder.value = row
+    elderApi.selectAssignedTag(row.id).then(result => {
+      tagList.value = result.data.tagList
+      assignedTagIdList.value = result.data.assignedTagIdList
+      dialogTagVisible.value = true
+    })
+  }
 </script>
 
 <template>
@@ -212,7 +224,7 @@
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
-          <el-button size="small" type="success" @click="addTags(row.id)">标签</el-button>
+          <el-button size="small" type="success" @click="showAssignedTagDialog(row)">标签</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -277,6 +289,23 @@
         </el-button>
       </div>
     </template>
+  </el-dialog>
+  <!-- 角色分配dialog-->
+  <el-dialog title="标签" v-model="dialogTagVisible" width="40%">
+    <el-form ref="form" :model="elder" label-width="80px">
+      <el-form-item label="用户名">
+        <el-input v-model="elder.name" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="角色列表">
+        <el-checkbox-group v-model="assignedTagIdList">
+          <el-checkbox v-for="tag in tagList" :key="tag.id" :label="tag.id">{{tag.name}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="assignTag">保存</el-button>
+        <el-button  @click="dialogTagVisible = false">取消</el-button>
+      </el-form-item>
+    </el-form>
   </el-dialog>
 </template>
 
