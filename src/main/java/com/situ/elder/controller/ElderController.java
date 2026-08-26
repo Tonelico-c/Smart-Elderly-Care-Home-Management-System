@@ -51,6 +51,12 @@ public class ElderController {
         return Result.ok("添加成功");
     }
 
+    @PostMapping("/assignTag")
+    public Result assignTag(Long elderId, Long[] tagIds){
+        elderService.assignTag(elderId, tagIds);
+        return Result.ok("分配标签成功");
+    }
+
     @PutMapping("/{id}")
     public Result<Elder> update(@RequestBody Elder elder){
         elderService.updateById(elder);

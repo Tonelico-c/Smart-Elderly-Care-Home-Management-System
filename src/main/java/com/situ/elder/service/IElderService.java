@@ -20,4 +20,6 @@ public interface IElderService extends IService<Elder> {
     IPage<Elder> list(ElderQuery elderQuery);
 
     Map<String, Object> selectAssignedTag(Long elderId);
+
+    void assignTag(Long elderId, Long[] tagIds);
 }

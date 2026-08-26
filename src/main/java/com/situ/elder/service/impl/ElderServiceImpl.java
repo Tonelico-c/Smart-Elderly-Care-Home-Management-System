@@ -63,4 +63,19 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
         map.put("assignedTagIdList", assignedTagIdList);
         return map;
     }
+
+    @Override
+    public void assignTag(Long elderId, Long[] tagIds) {
+        // 删除老人已分配的标签
+        LambdaQueryWrapper<ElderTag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ElderTag::getElderId, elderId);
+        elderTagMapper.delete(wrapper);
+        // 添加新的标签
+        for(Long tagId : tagIds){
+            ElderTag eldertag = new ElderTag();
+            eldertag.setElderId(elderId);
+            eldertag.setTagId(tagId);
+            elderTagMapper.insert(eldertag);
+        }
+    }
 }

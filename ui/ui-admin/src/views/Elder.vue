@@ -152,7 +152,7 @@
   const dialogTagVisible = ref(false)
   const tagList = ref([])
   const assignedTagIdList = ref([])
-
+  // 显示已分配标签对话框
   const showAssignedTagDialog = (row) => {
     elder.value = row
     elderApi.selectAssignedTag(row.id).then(result => {
@@ -160,6 +160,23 @@
       assignedTagIdList.value = result.data.assignedTagIdList
       dialogTagVisible.value = true
     })
+  }
+  // 分配标签
+  const assignTag = () => {
+    const dataDTO = {
+      elderId: elder.value.id,
+      assignedTagIdList: assignedTagIdList.value
+    };
+    const tagIds = assignedTagIdList.value.join(',');
+    // /elders/assignTag?elderId=1&tagIds=1,2,3
+    elderApi.assignTag(elder.value.id, tagIds).then((result) => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg);
+        dialogTagVisible.value = false;
+      } else {
+        ElMessage.error(result.msg);
+      }
+    });
   }
 </script>
 

@@ -21,7 +21,10 @@ const elderApi = {
     },
     selectAssignedTag(elderId){
         return request.get(`/elders/selectAssignedTag/${elderId}`)
-    }
+    },
+    assignTag(elderId, tagIds){
+        return request.post("/elders/assignTag", null, {params: {elderId, tagIds}})
+    },
 }
 
 export default elderApi
