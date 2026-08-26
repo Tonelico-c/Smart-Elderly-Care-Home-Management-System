@@ -15,11 +15,15 @@
   const tokenStore = useTokenStore();
   //条目被点击后,调用的函数
   import {useRouter} from 'vue-router'
-  import {ElMessageBox} from "element-plus";
+  import {ElMessage, ElMessageBox} from "element-plus";
   const router = useRouter()
   import userApi from "@/api/user.js";
   import {UserInfoStore} from '@/store/userInfo.js'
+  import {ref} from "vue";
   const userInfoStore = UserInfoStore();
+
+  const dialogFormVisible = ref(false)
+  const user = ref({})
   const handleCommand = (command) => {
     //判断指令
     if (command === 'logout') {
@@ -37,8 +41,9 @@
       }).catch(()=>{
 
       })
-    } else if(command === 'avatar') {
-        router.push('/user/avatar')
+    } else if(command === 'updateUserinfo'){
+      dialogFormVisible.value = true
+      Object.assign(user.value, userInfoStore.user)
     } else if(command === 'resetPassword'){
       router.push('/user/resetPassword')
     } else {
@@ -47,10 +52,29 @@
   }
 
   // 获取用户信息
-  userApi.userInfo().then(result=>{
-    userInfoStore.setUserInfo(result.data)
-  })
+  const getUserInfo = () => {
+    userApi.userInfo().then(result => {
+      userInfoStore.setUserInfo(result.data)
+    })
+  }
+  getUserInfo()
 
+  // 头像上传成功
+  const handleAvatarSuccess = (res) => {
+    user.value.avatar = res.data
+  }
+
+  const updateUserInfo = () => {
+    userApi.update(user.value.id, user.value).then(result => {
+      if(result.code === 1){
+        dialogFormVisible.value = false
+        ElMessage.success('更新成功')
+        getUserInfo()
+      }else{
+        ElMessage.error('更新失败')
+      }
+    })
+  }
 </script>
 
 <template>
@@ -119,7 +143,7 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="info" :icon="User">基本资料</el-dropdown-item>
-              <el-dropdown-item command="avatar" :icon="Crop">更换头像</el-dropdown-item>
+              <el-dropdown-item command="updateUserinfo" :icon="Crop">修改信息</el-dropdown-item>
               <el-dropdown-item command="resetPassword" :icon="EditPen">重置密码</el-dropdown-item>
               <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -137,6 +161,39 @@
       <el-footer>后台管理 ©2024 Created by Gao</el-footer>
     </el-container>
   </el-container>
+
+  <el-dialog v-model="dialogFormVisible" :title="修改信息" width="500" :lock-scroll="false">
+    <el-form :model="user">
+      <el-form-item label="名字" :label-width="60">
+        <el-input v-model="user.name" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="邮箱" :label-width="60">
+        <el-input v-model="user.email" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="手机号" :label-width="60">
+        <el-input v-model="user.phone" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="头像" :label-width="60">
+        <el-upload
+            class="avatar-uploader"
+            action="/api/upload"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :headers="{Authorization: tokenStore.token}">
+          <img v-if="user.avatar" :src="user.avatar" class="avatar" />
+          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+        </el-upload>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="updateUserInfo">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style lang="scss" scoped>
@@ -185,5 +242,32 @@
     font-size: 14px;
     color: #666;
   }
+}
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+}
+
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+  object-fit: cover;
 }
 </style>

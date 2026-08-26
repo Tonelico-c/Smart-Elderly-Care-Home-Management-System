@@ -45,8 +45,8 @@ public class UserController {
 
         //生成token
         Map<String, Object> map = new HashMap<>();
-        map.put("name",dbUser.getName());
-        map.put("password",dbUser.getPassword());
+        map.put("id", dbUser.getId());
+        map.put("name", dbUser.getName());
         String token = JwtUtil.createToken(map);
         return Result.ok("登录成功",token);
     }
@@ -65,8 +65,9 @@ public class UserController {
     @GetMapping("/userInfo")
     public Result<User> userInfo(@RequestHeader("Authorization") String token){
         Map<String, Object> map = JwtUtil.parseToken(token);
-        String username = (String) map.get("name");
-        User user = userService.getOne(new QueryWrapper<User>().eq("name", username));
+//        String username = (String) map.get("name");
+        Integer id = (Integer) map.get("id");
+        User user = userService.getById(id);
         user.setPassword("");
         return Result.ok(user);
     }

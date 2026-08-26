@@ -1,5 +1,4 @@
 <script setup>
-
   import {ref} from "vue";
   import {User,Lock} from "@element-plus/icons-vue";
 
@@ -31,7 +30,7 @@
   const rules = ref({
     name: [
       {required: true, message: '请输入用户名', trigger: 'blur'},
-      {min: 4, max: 16, message: '用户名的长度必须为5~16位', trigger: 'blur'}
+      {min: 4, max: 16, message: '用户名的长度必须为4~16位', trigger: 'blur'}
     ],
     password: [
       {required: true, message: '请输入密码', trigger: 'blur'},

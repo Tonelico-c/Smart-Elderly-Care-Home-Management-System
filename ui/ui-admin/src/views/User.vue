@@ -240,9 +240,6 @@
       <el-form-item label="名字" :label-width="60">
         <el-input v-model="user.name" autocomplete="off" />
       </el-form-item>
-      <el-form-item label="密码" :label-width="60">
-        <el-input v-model="user.password" autocomplete="off" />
-      </el-form-item>
       <el-form-item label="邮箱" :label-width="60">
         <el-input v-model="user.email" autocomplete="off" />
       </el-form-item>
