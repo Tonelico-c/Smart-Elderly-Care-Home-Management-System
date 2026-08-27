@@ -44,12 +44,21 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
 
     @Override
     public IPage<ElderVo> list(ElderQuery elderQuery) {
+        IPage<ElderVo> page = new Page<>(elderQuery.getPage(), elderQuery.getLimit());
+
         LambdaQueryWrapper<Elder> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(!ObjectUtils.isEmpty(elderQuery.getName()),Elder::getName, elderQuery.getName())
                 .like(!ObjectUtils.isEmpty(elderQuery.getPhone()),Elder::getPhone, elderQuery.getPhone())
                 .between(!ObjectUtils.isEmpty(elderQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(elderQuery.getEndCreateTime()), Elder::getCreateTime, elderQuery.getBeginCreateTime(), elderQuery.getEndCreateTime());
 
-        // 1. 用 Elder 做分页查询（selectPage 泛型上界要求 IPage<Elder>）
+       IPage<ElderVo> elderVoPage = elderMapper.list(page,elderQuery);
+        for(ElderVo elderVo : elderVoPage.getRecords()){
+            elderVo.setTagNames(elderVo.getTagNamesStr() == null
+                    ? List.of() : List.of(elderVo.getTagNamesStr().split(",")));
+        }
+       return elderVoPage;
+
+        /*// 1. 用 Elder 做分页查询（selectPage 泛型上界要求 IPage<Elder>）
         IPage<Elder> elderPage = new Page<>(elderQuery.getPage(), elderQuery.getLimit());
         elderMapper.selectPage(elderPage, wrapper);
         // 2. Elder 转 ElderVo，组装成新的分页对象（把 total、页码等信息带过去）
@@ -58,8 +67,8 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
             BeanUtils.copyProperties(elder, vo);
             return vo;
         }).toList();
-        Page<ElderVo> page = new Page<>(elderPage.getCurrent(), elderPage.getSize(), elderPage.getTotal());
-        page.setRecords(records);
+        Page<ElderVo> voPage = new Page<>(elderPage.getCurrent(), elderPage.getSize(), elderPage.getTotal());
+        voPage.setRecords(records);
         if(!ObjectUtils.isEmpty(records)){
             // 收集当前页所有老人的id
             List<Long> elderIds = records.stream().map(ElderVo::getId).toList();
@@ -84,7 +93,7 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
             }
         }
 
-        return page;
+        return voPage;*/
     }
 
     @Override

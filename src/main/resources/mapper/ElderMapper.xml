@@ -2,4 +2,37 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.situ.elder.mapper.ElderMapper">
 
+    <resultMap id="ElderVoMap" type="com.situ.elder.pojo.vo.ElderVo">
+        <id property="id" column="id" />
+        <result column="name" property="name" />
+        <result column="avatar" property="avatar" />
+        <result column="id_card_no" property="idCardNo" />
+        <result column="phone" property="phone" />
+        <result column="status" property="status" />
+        <result column="birthday" property="birthday" />
+        <result column="address" property="address" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="tag_names" property="tagNamesStr" />
+    </resultMap>
+    <select id="list" resultMap="ElderVoMap">
+        SELECT e.*, GROUP_CONCAT(t.name ORDER BY t.id SEPARATOR ',') AS tag_names
+        FROM elder AS e LEFT JOIN elder_tag AS et
+        ON e.id  = et.elder_id
+        LEFT JOIN tag AS t
+        ON et.tag_id = t.id AND t.deleted = 0
+        <where>
+            e.deleted = 0
+            <if test="elderQuery.name != null and elderQuery.name != ''">
+                AND e.name LIKE CONCAT('%', #{elderQuery.name}, '%')
+            </if>
+            <if test="elderQuery.phone != null and elderQuery.phone != ''">
+                AND e.phone LIKE CONCAT('%', #{elderQuery.phone}, '%')
+            </if>
+            <if test="(elderQuery.beginCreateTime != null) and (elderQuery.endCreateTime != null)">
+                AND e.create_time BETWEEN #{elderQuery.beginCreateTime} AND #{elderQuery.endCreateTime}
+            </if>
+        </where>
+        GROUP BY e.id
+    </select>
 </mapper>

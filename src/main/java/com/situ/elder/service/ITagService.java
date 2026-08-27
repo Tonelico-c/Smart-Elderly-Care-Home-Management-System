@@ -20,5 +20,5 @@ public interface ITagService extends IService<Tag> {
 
     IPage<Tag> list(TagQuery tagQuery);
 
-    List<ElderVo> selectRelatedElder(Long tagId);
+//    List<ElderVo> selectRelatedElder(Long tagId);
 }

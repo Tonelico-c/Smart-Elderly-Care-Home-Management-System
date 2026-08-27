@@ -151,7 +151,7 @@
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
-          <el-button size="small" type="success" @click="showRelatedElder(row)">相关老人</el-button>
+<!--          <el-button size="small" type="success" @click="showRelatedElder(row)">相关老人</el-button>-->
         </template>
       </el-table-column>
     </el-table>
@@ -185,7 +185,7 @@
     </template>
   </el-dialog>
   <!--相关老人弹出框-->
-  <el-dialog v-model="dialogElderVisible" :title="`标签【${tag.name}】的相关老人`" width="900" :lock-scroll="false">
+<!--  <el-dialog v-model="dialogElderVisible" :title="`标签【${tag.name}】的相关老人`" width="900" :lock-scroll="false">
     <el-table :data="assignElder" border style="width: 100%">
       <el-table-column prop="id" label="ID" width="70"/>
       <el-table-column prop="name" label="姓名" width="100"/>
@@ -218,7 +218,7 @@
         <el-button @click="dialogElderVisible = false">关闭</el-button>
       </div>
     </template>
-  </el-dialog>
+  </el-dialog>-->
 </template>
 
 <style scoped>

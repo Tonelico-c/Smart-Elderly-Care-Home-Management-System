@@ -5,6 +5,7 @@
   import {Plus} from '@element-plus/icons-vue'
   import {useTokenStore} from '@/store/token.js'
   const tokenStore = useTokenStore();
+  import defaultAvatar from '@/assets/default.png'
   //表格数据
   const list = ref([])
   const total = ref(0)
@@ -196,7 +197,7 @@
       <el-table-column prop="email" label="邮箱"/>
       <el-table-column prop="avatar" label="头像">
         <template #default="{row}">
-          <img :src="row.avatar" alt="头像" style="width: 40px; height: 50px">
+          <img :src="row.avatar || defaultAvatar" alt="头像" style="width: 40px; height: 50px">
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100px">
@@ -213,7 +214,6 @@
           />
         </template>
       </el-table-column>
-      <!-- <el-table-column prop="avatar" label="头像"/> -->
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">

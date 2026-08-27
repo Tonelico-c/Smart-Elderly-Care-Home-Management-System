@@ -1,7 +1,10 @@
 package com.situ.elder.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Elder;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.situ.elder.pojo.query.ElderQuery;
+import com.situ.elder.pojo.vo.ElderVo;
 
 /**
  * <p>
@@ -13,4 +16,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface ElderMapper extends BaseMapper<Elder> {
 
+    IPage<ElderVo> list(IPage<ElderVo> voPage, ElderQuery elderQuery);
 }

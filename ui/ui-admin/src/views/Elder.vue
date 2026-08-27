@@ -5,6 +5,7 @@
   import {Plus} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
   import {useTokenStore} from '@/store/token.js'
+  import defaultAvatar from '@/assets/default.png'
   const tokenStore = useTokenStore();
   const list = ref([])
   const total = ref(0)
@@ -209,7 +210,7 @@
       <el-table-column fixed prop="id" label="ID"/>
       <el-table-column prop="avatar" label="头像">
         <template #default="{row}">
-          <img :src="row.avatar" alt="" style="width: 40px; height: 50px">
+          <img :src="row.avatar || defaultAvatar" alt="" style="width: 40px; height: 50px">
         </template>
       </el-table-column>
       <el-table-column prop="name" label="名字" width="100"/>
@@ -230,17 +231,12 @@
           </el-select>
         </template>
       </el-table-column>
-      <el-table-column prop="tags" label="标签" width="200">
+      <el-table-column prop="tagNames" label="标签" width="200">
         <template #default="{ row }">
-          <el-tag
-              v-for="tag in (row.tags || [])"
-              :key="tag.id"
-              type="primary"
-              style="margin: 2px"
-          >{{ tag.name }}</el-tag>
+          <el-tag v-for="name in (row.tagNames || [])" :key="name"
+                  type="primary" style="margin: 2px">{{ name }}</el-tag>
         </template>
       </el-table-column>
-      <!-- <el-table-column prop="avatar" label="头像"/> -->
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">

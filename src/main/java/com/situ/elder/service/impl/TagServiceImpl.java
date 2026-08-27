@@ -49,7 +49,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements ITagS
         return tagMapper.selectPage(page, lambdaQueryWrapper);
     }
 
-    @Override
+    /*@Override
     public List<ElderVo> selectRelatedElder(Long tagId) {
         // 1. 查出该标签关联的所有老人id
         List<Long> elderIds = elderTagMapper.selectList(
@@ -87,5 +87,5 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements ITagS
             }
         }
         return elderVos;
-    }
+    }*/
 }
