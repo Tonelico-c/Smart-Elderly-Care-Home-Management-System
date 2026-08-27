@@ -10,6 +10,7 @@ import Elder from '@/views/Elder.vue'
 import UserInfo from "@/views/UserInfo.vue";
 import Tag from "@/views/Tag.vue";
 import Role from "@/views/Role.vue";
+import Permission from "@/views/Permission.vue";
 
 
 
@@ -27,7 +28,8 @@ const router = createRouter({
                 {path: '/elder', component: Elder},
                 {path: '/user/info', component: UserInfo},
                 {path: '/tag', component: Tag},
-                {path: '/role', component: Role}
+                {path: '/role', component: Role},
+                {path:'/permission', component: Permission}
             ]
         }
     ]

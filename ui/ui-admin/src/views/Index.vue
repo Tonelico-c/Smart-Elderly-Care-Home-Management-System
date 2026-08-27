@@ -1,22 +1,28 @@
 <script setup>
   import {
-    Management,
-    Promotion,
-    UserFilled,
-    User,
+    Avatar,
+    CaretBottom,
+    CollectionTag,
     Crop,
+    Document,
     EditPen,
+    Key,
+    Lock,
+    Postcard,
+    Setting,
     SwitchButton,
-    CaretBottom
+    User,
+    UserFilled
   } from '@element-plus/icons-vue'
   import avatar from '@/assets/default.png'
 
   import {useTokenStore} from '@/store/token.js'
   const tokenStore = useTokenStore();
   //条目被点击后,调用的函数
-  import {useRouter} from 'vue-router'
+  import {useRouter, useRoute} from 'vue-router'
   import {ElMessage, ElMessageBox} from "element-plus";
   const router = useRouter()
+  const route = useRoute()
   import userApi from "@/api/user.js";
   import {UserInfoStore} from '@/store/userInfo.js'
   import {ref} from "vue";
@@ -143,33 +149,38 @@
     <el-aside width="200px">
       <div class="el-aside__logo"></div>
       <!-- element-plus的菜单标签 -->
+      <!-- default-active 绑定当前路由,让菜单自动高亮当前页面 -->
       <el-menu active-text-color="#ffd04b" background-color="#232323" text-color="#fff"
-               router>
-        <el-menu-item index="/elder">
-          <el-icon>
-            <Promotion/>
-          </el-icon>
-          <span>老人管理</span>
-        </el-menu-item>
-        <el-menu-item index="/tag">
-          <el-icon>
-            <Crop/>
-          </el-icon>
-          <span>标签管理</span>
-        </el-menu-item>
-        <el-sub-menu>
+               :default-active="route.path" router>
+        <!-- 业务管理 -->
+        <el-sub-menu index="business">
           <template #title>
+            <el-icon>
+              <Avatar/>
+            </el-icon>
+            <span>业务管理</span>
+          </template>
+          <el-menu-item index="/elder">
             <el-icon>
               <UserFilled/>
             </el-icon>
-            <span>权限管理</span>
-          </template>
-          <el-menu-item index="/user/info">
-            <el-icon>
-              <User/>
-            </el-icon>
-            <span>个人资料</span>
+            <span>老人管理</span>
           </el-menu-item>
+          <el-menu-item index="/tag">
+            <el-icon>
+              <CollectionTag/>
+            </el-icon>
+            <span>标签管理</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <!-- 系统管理 -->
+        <el-sub-menu index="system">
+          <template #title>
+            <el-icon>
+              <Setting/>
+            </el-icon>
+            <span>系统管理</span>
+          </template>
           <el-menu-item index="/user">
             <el-icon>
               <User/>
@@ -178,9 +189,30 @@
           </el-menu-item>
           <el-menu-item index="/role">
             <el-icon>
-              <User/>
+              <Key/>
             </el-icon>
             <span>角色管理</span>
+          </el-menu-item>
+          <el-menu-item index="/permission">
+            <el-icon>
+              <Lock/>
+            </el-icon>
+            <span>权限管理</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <!-- 个人中心 -->
+        <el-sub-menu index="personal">
+          <template #title>
+            <el-icon>
+              <Postcard/>
+            </el-icon>
+            <span>个人中心</span>
+          </template>
+          <el-menu-item index="/user/info">
+            <el-icon>
+              <Document/>
+            </el-icon>
+            <span>个人资料</span>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
@@ -285,8 +317,8 @@
     background-color: #232323;
 
     &__logo {
-      height: 120px;
-      background: url('@/assets/logo.png') no-repeat center / 120px auto;
+      height: 80px;
+      background: url('@/assets/logo.png') no-repeat center / 100px auto;
     }
 
     .el-menu {
