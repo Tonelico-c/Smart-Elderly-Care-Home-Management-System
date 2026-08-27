@@ -1,10 +1,15 @@
 package com.situ.elder.controller;
 
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.situ.elder.pojo.entity.Role;
+import com.situ.elder.pojo.query.RoleQuery;
+import com.situ.elder.service.IRoleService;
+import com.situ.elder.utils.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 /**
  * <p>
@@ -17,6 +22,47 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/roles")
 public class RoleController {
+
+    @Autowired
+    private IRoleService roleService;
+
+    @GetMapping
+    public Result<IPage<Role>> list(RoleQuery roleQuery){
+        IPage<Role> page = roleService.list(roleQuery);
+        return Result.ok(page);
+    }
+
+    @GetMapping("/{id}")
+    public Result<Role> selectById(@PathVariable Long id){
+        return Result.ok(roleService.getById(id));
+    }
+
+
+
+    @DeleteMapping("/{id}")
+    public Result deleteById(@PathVariable Long id){
+        roleService.removeById(id);
+        return Result.ok("删除成功");
+    }
+    @DeleteMapping
+    public Result deleteBatch(@RequestBody List<Long> ids){
+        roleService.removeByIds(ids);
+        return Result.ok("删除成功");
+    }
+
+    @PostMapping
+    public Result<Role> add(@RequestBody Role role){
+        roleService.save(role);
+        return Result.ok("添加成功");
+    }
+
+    @PutMapping
+    public Result update(@RequestBody Role role){
+        roleService.updateById(role);
+        return Result.ok("修改成功");
+    }
+
+
 
 }
 

@@ -1,8 +1,129 @@
 <script setup>
 
   import {Delete, Download, Plus, Refresh, Search, Upload} from "@element-plus/icons-vue";
+  import {ref} from "vue";
+  import roleApi from "@/api/role.js";
+  import {ElMessage, ElMessageBox} from "element-plus";
 
-  import defaultAvatar from "@/assets/default.png";
+  const roleQuery = ref({
+    name:'',
+    code:'',
+    page:1,
+    limit:10
+  })
+  const list = ref([])
+  const total = ref(0)
+
+  const createTimeRange = ref([])
+  const loadData = () => {
+    roleQuery.value.beginCreateTime = createTimeRange.value?.[0]
+    roleQuery.value.endCreateTime = createTimeRange.value?.[1]
+    roleApi.list(roleQuery.value).then(result => {
+      list.value = result.data.records
+      total.value = result.data.total
+    })
+  }
+  loadData()
+  const onSearch = () => {
+    roleQuery.value.page = 1
+    loadData()
+  }
+  const resetSearch = () => {
+    roleQuery.value = {
+      name:'',
+      code:'',
+      page:1,
+      limit:10
+    }
+    createTimeRange.value = []
+    loadData()
+  }
+
+  let ids = []
+  const handleSelectionChange = (rows) => {
+    ids = rows.map(row => row.id)
+    console.log(ids)
+  }
+  const deleteById = id => {
+    ElMessageBox.confirm(
+        '您确认要删除么?',
+        '警告',
+        {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }
+    ).then(() => {
+      roleApi.deleteById(id).then(result => {
+        if (result.code === 1) {
+          ElMessage.success(result.msg)
+          loadData()
+        } else {
+          ElMessage.error(result.msg)
+        }
+      }).catch(() => {})
+    })
+  }
+  const deleteAll = () => {
+    ElMessageBox.confirm(
+        '您确认要删除所选中的记录吗?',
+        '警告',
+        {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }
+    ).then(() => {
+      roleApi.deleteBatch(ids).then(result => {
+        if (result.code === 1) {
+          ElMessage.success(result.msg)
+          loadData()
+        } else {
+          ElMessage.error(result.msg)
+        }
+      }).catch(() => {})
+    })
+  }
+
+  const role = ref({})
+  const title = ref()
+  const dialogFormVisible = ref(false)
+  const showAddDialog = () => {
+    title.value = '添加'
+    dialogFormVisible.value = true
+    role.value = {}
+  }
+  const showUpdateDialog = id => {
+    title.value = '编辑'
+    dialogFormVisible.value = true
+    roleApi.selectById(id).then(result => {
+      role.value = result.data
+    })
+  }
+  // 添加或更新
+  const addOrUpdate = () => {
+    if(role.value.id){
+      roleApi.update(role.value.id,role.value).then(result => {
+        if(result.code === 1){
+          ElMessage.success(result.msg)
+          dialogFormVisible.value = false
+          loadData()
+        }else{
+          ElMessage.error(result.msg)
+        }
+      })
+    }else{
+      roleApi.add(role.value).then(result => {
+        if(result.code === 1){
+          ElMessage.success(result.msg)
+          dialogFormVisible.value = false
+          loadData()
+        }else{
+          ElMessage.error(result.msg)
+        }
+      })
+    }
+  }
 </script>
 
 <template>
@@ -11,17 +132,17 @@
       <el-form :inline="true" class="search-form" @submit.prevent>
         <el-form-item label="名字">
           <el-input
-              v-model="userQuery.name"
+              v-model="roleQuery.name"
               placeholder="请输入名字"
               clearable
               style="width: 220px"
               @keyup.enter="onSearch"
           />
         </el-form-item>
-        <el-form-item label="邮箱">
+        <el-form-item label="编码">
           <el-input
-              v-model="userQuery.email"
-              placeholder="请输入邮箱"
+              v-model="roleQuery.code"
+              placeholder="请输入编码"
               clearable
               style="width: 220px"
               @keyup.enter="onSearch"
@@ -51,9 +172,8 @@
       <el-table-column type="selection" width="55" />
       <el-table-column fixed prop="id" label="ID"/>
       <el-table-column prop="name" label="名字"/>
-      <el-table-column prop="password" label="密码"/>
-      <el-table-column prop="phone" label="电话"/>
-      <el-table-column prop="email" label="邮箱"/>
+      <el-table-column prop="code" label="编码"/>
+      <el-table-column prop="description" label="权限描述"/>
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">
@@ -64,8 +184,8 @@
     </el-table>
     <div class="pagination-wrapper">
       <el-pagination
-          v-model:current-page="userQuery.page"
-          v-model:page-size="userQuery.limit"
+          v-model:current-page="roleQuery.page"
+          v-model:page-size="roleQuery.limit"
           :page-sizes="[10, 20, 30, 40]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
@@ -73,7 +193,28 @@
       />
     </div>
   </el-card>
-
+  <!--添加、编辑弹出框-->
+  <el-dialog v-model="dialogFormVisible" :title="title" width="500" :lock-scroll="false" :close-on-click-modal="false">
+    <el-form :model="role">
+      <el-form-item label="名字" :label-width="60">
+        <el-input v-model="role.name" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="编码" :label-width="60">
+        <el-input v-model="role.code" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="权限描述" :label-width="60">
+        <el-input v-model="role.description" autocomplete="off" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="addOrUpdate">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
