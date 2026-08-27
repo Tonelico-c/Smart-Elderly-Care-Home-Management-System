@@ -2,13 +2,14 @@
 
   import {ref} from "vue";
   import elderApi from "@/api/elder.js";
-  import {Plus} from "@element-plus/icons-vue";
+  import {Delete, Plus, Search, Refresh} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
   import {useTokenStore} from '@/store/token.js'
   import defaultAvatar from '@/assets/default.png'
   import tagApi from "@/api/tag.js";
   const tokenStore = useTokenStore();
 
+  // 存储所有标签的Id
   const allTags = ref([])
   tagApi.list({page: 1, limit: 1000}).then(result => {
     allTags.value = result.data.records
@@ -201,49 +202,59 @@
 <template>
   <el-card class="">
     <template #header>
-      <div class="header">
-        <el-button type="primary" @click="showAddDialog">添加</el-button>
-        <el-button type="danger" @click="deleteAll">批量删除</el-button>
-      </div>
+      <el-form :inline="true" class="search-form" @submit.prevent>
+        <el-form-item label="名字">
+          <el-input
+              v-model="elderQuery.name"
+              placeholder="请输入名字"
+              clearable
+              style="width: 220px"
+              @keyup.enter="onSearch"
+          />
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input
+              v-model="elderQuery.phone"
+              placeholder="请输入电话"
+              clearable
+              style="width: 220px"
+              @keyup.enter="onSearch"
+          />
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-date-picker
+              v-model="createTimeRange"
+              type="datetimerange"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+          />
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-select v-model="selectedTagIds" class="tag-select" multiple clearable collapse-tags
+                     :max-collapse-tags="3" collapse-tags-tooltip
+                     placeholder="请选择标签" style="width: 320px">
+            <el-option v-for="tag in allTags" :key="tag.id"
+                       :label="tag.name" :value="tag.id"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="onSearch">搜索</el-button>
+          <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
     </template>
-    <el-form :inline="true">
-      <el-form-item label="名字">
-        <el-input v-model="elderQuery.name" placeholder="请输入名字" clearable style="width: 150px"/>
-      </el-form-item>
-      <el-form-item label="电话">
-        <el-input v-model="elderQuery.phone" placeholder="请输入电话 " clearable style="width: 150px"/>
-      </el-form-item>
-      <el-form-item label="创建时间">
-        <el-date-picker
-            v-model="createTimeRange"
-            type="datetimerange"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-        />
-      </el-form-item>
-      <el-form-item label="标签">
-        <el-select v-model="selectedTagIds" class="tag-select" multiple clearable collapse-tags
-                   :max-collapse-tags="3" collapse-tags-tooltip
-                   placeholder="请选择标签" style="width: 300px">
-          <el-option v-for="tag in allTags" :key="tag.id"
-                     :label="tag.name" :value="tag.id"/>
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSearch">搜索</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="default" @click="resetSearch">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <div class="toolbar">
+      <el-button type="primary" :icon="Plus" @click="showAddDialog">添加</el-button>
+      <el-button type="danger" :icon="Delete" @click="deleteAll">批量删除</el-button>
+    </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
       <el-table-column fixed prop="id" label="ID"/>
       <el-table-column prop="avatar" label="头像">
         <template #default="{row}">
-          <img :src="row.avatar || defaultAvatar" alt="" style="width: 40px; height: 50px">
+          <img :src="row.avatar || defaultAvatar" alt="" class="table-avatar">
         </template>
       </el-table-column>
       <el-table-column prop="name" label="名字" width="100"/>
@@ -280,15 +291,16 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination
-        v-model:current-page="elderQuery.page"
-        v-model:page-size="elderQuery.limit"
-        :page-sizes="[10, 20, 30, 40]"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        @change="loadData"
-        style="margin-top: 20px; justify-content: flex-end"
-    />
+    <div class="pagination-wrapper">
+      <el-pagination
+          v-model:current-page="elderQuery.page"
+          v-model:page-size="elderQuery.limit"
+          :page-sizes="[10, 20, 30, 40]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @change="loadData"
+      />
+    </div>
   </el-card>
 
   <!--添加、编辑弹出框-->
@@ -363,6 +375,39 @@
 
 <style scoped>
 /* 标签下拉框：禁止标签换行，避免选多了把搜索表单整行撑高 */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+}
+
+.search-form :deep(.el-form-item) {
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.table-avatar {
+  width: 50px;
+  height: 50px;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+}
+
 .tag-select :deep(.el-select__selection) {
   flex-wrap: nowrap;
   overflow: hidden;
@@ -378,7 +423,7 @@
 
 .avatar-uploader .el-upload {
   border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
+  border-radius: 50%;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -402,5 +447,6 @@
   height: 178px;
   display: block;
   object-fit: cover;
+  border-radius: 50%;
 }
 </style>

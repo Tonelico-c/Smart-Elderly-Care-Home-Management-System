@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.situ.elder.excelListener.UserExcelListener;
+import com.situ.elder.exception.ServiceException;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.mapper.UserMapper;
 import com.situ.elder.pojo.query.UserQuery;
@@ -14,6 +15,7 @@ import com.situ.elder.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.situ.elder.utils.ExcelUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ import java.util.List;
  * @since 2026-08-24
  */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
     @Autowired
@@ -74,5 +77,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void add(User user) {
+
+        log.info("添加用户: {}", user);
+        User dbUser = userMapper.selectOne(new QueryWrapper<User>().eq("name", user.getName()));
+        if(dbUser != null){
+            log.error("添加失败，用户名已存在");
+            throw new ServiceException("用户名已存在");
+        }
+        log.info("用户添加成功: {}", user);
+        userMapper.insert(user);
     }
 }

@@ -22,4 +22,6 @@ public interface IUserService extends IService<User> {
     void exportExcel(HttpServletResponse response);
 
     void importExcel(MultipartFile file);
+
+    void add(User user);
 }

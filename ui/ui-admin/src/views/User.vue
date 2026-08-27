@@ -7,7 +7,9 @@
     Edit,
     Upload,
     Download,
-    Plus
+    Plus,
+    Search,
+    Refresh
   } from '@element-plus/icons-vue'
   import {useTokenStore} from '@/store/token.js'
   const tokenStore = useTokenStore();
@@ -193,8 +195,10 @@
   }
   const importExcelSuccess = (result) => {
     if(result.code === 1){
-      ElMessage.success('导入成功')
+      ElMessage.success(result.msg)
       loadData()
+    } else {
+      ElMessage.error(result.msg)
     }
   }
 </script>
@@ -202,50 +206,57 @@
 <template>
   <el-card class="">
     <template #header>
-      <div class="header">
-        <el-button type="primary" @click="showAddDialog">添加</el-button>
-        <el-button type="danger" @click="deleteAll">批量删除</el-button>
-        <el-button type="primary" :icon="Download" @click="exportExcel">导出Excel</el-button>
-        <el-upload
-            :icon="Upload"
-            class="inline-block"
-            multiple=""
-            method="post"
-            action="/api/users/importExcel"
-            style="display:inline-block;margin-left: 12px"
-            accept=".xlsx,.xls"
-            :show-file-list="false"
-            :on-success="importExcelSuccess"
-            :headers="{Authorization: tokenStore.token}"
-            name="file">
-          <el-button type="primary" :icon="Upload">导入Excel</el-button>
-        </el-upload>
-      </div>
+      <el-form :inline="true" class="search-form" @submit.prevent>
+        <el-form-item label="名字">
+          <el-input
+              v-model="userQuery.name"
+              placeholder="请输入名字"
+              clearable
+              style="width: 220px"
+              @keyup.enter="onSearch"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input
+              v-model="userQuery.email"
+              placeholder="请输入邮箱"
+              clearable
+              style="width: 220px"
+              @keyup.enter="onSearch"
+          />
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-date-picker
+              v-model="createTimeRange"
+              type="datetimerange"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="onSearch">搜索</el-button>
+          <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
     </template>
-    <el-form :inline="true">
-      <el-form-item label="名字">
-        <el-input v-model="userQuery.name" placeholder="请输入名字" clearable style="width: 150px"/>
-      </el-form-item>
-      <el-form-item label="邮箱">
-        <el-input v-model="userQuery.email" placeholder="请输入邮箱" clearable style="width: 150px"/>
-      </el-form-item>
-      <el-form-item label="创建时间">
-        <el-date-picker
-            v-model="createTimeRange"
-            type="datetimerange"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSearch">搜索</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="default" @click="resetSearch">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <div class="toolbar">
+      <el-button type="primary" :icon="Plus" @click="showAddDialog">添加</el-button>
+      <el-button type="danger" :icon="Delete" @click="deleteAll">批量删除</el-button>
+      <el-upload
+          multiple=""
+          method="post"
+          action="/api/users/importExcel"
+          accept=".xlsx,.xls"
+          :show-file-list="false"
+          :on-success="importExcelSuccess"
+          :headers="{Authorization: tokenStore.token}"
+          name="file">
+        <el-button type="primary" :icon="Upload">导入Excel</el-button>
+      </el-upload>
+      <el-button type="success" :icon="Download" @click="exportExcel">导出为Excel</el-button>
+    </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
       <el-table-column fixed prop="id" label="ID"/>
@@ -255,7 +266,7 @@
       <el-table-column prop="email" label="邮箱"/>
       <el-table-column prop="avatar" label="头像">
         <template #default="{row}">
-          <img :src="row.avatar || defaultAvatar" alt="头像" style="width: 40px; height: 50px">
+          <img :src="row.avatar || defaultAvatar" alt="头像" class="table-avatar"/>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100px">
@@ -280,15 +291,16 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination
-        v-model:current-page="userQuery.page"
-        v-model:page-size="userQuery.limit"
-        :page-sizes="[10, 20, 30, 40]"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        @change="loadData"
-        style="margin-top: 20px; justify-content: flex-end"
-    />
+    <div class="pagination-wrapper">
+      <el-pagination
+          v-model:current-page="userQuery.page"
+          v-model:page-size="userQuery.limit"
+          :page-sizes="[10, 20, 30, 40]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @change="loadData"
+      />
+    </div>
   </el-card>
 
 
@@ -334,17 +346,49 @@
 </template>
 
 <style scoped>
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+}
+
+.search-form :deep(.el-form-item) {
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.table-avatar {
+  width: 50px;
+  height: 50px;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+}
+
 .avatar-uploader .avatar {
   width: 178px;
   height: 178px;
   display: block;
+  border-radius: 50%;
+  object-fit: cover;
 }
-</style>
-
-<style>
 .avatar-uploader .el-upload {
   border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
+  border-radius: 50%;
   cursor: pointer;
   position: relative;
   overflow: hidden;

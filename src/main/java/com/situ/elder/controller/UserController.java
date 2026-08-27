@@ -99,7 +99,7 @@ public class UserController {
      */
     @PostMapping
     public Result add(@RequestBody User user) {
-        userService.save(user);
+        userService.add(user);
         return Result.ok("新增成功");
     }
 

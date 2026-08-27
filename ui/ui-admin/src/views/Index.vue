@@ -145,12 +145,6 @@
       <!-- element-plus的菜单标签 -->
       <el-menu active-text-color="#ffd04b" background-color="#232323" text-color="#fff"
                router>
-        <el-menu-item index="/user">
-          <el-icon>
-            <Management/>
-          </el-icon>
-          <span>用户管理</span>
-        </el-menu-item>
         <el-menu-item index="/elder">
           <el-icon>
             <Promotion/>
@@ -168,13 +162,25 @@
             <el-icon>
               <UserFilled/>
             </el-icon>
-            <span>个人中心</span>
+            <span>权限管理</span>
           </template>
           <el-menu-item index="/user/info">
             <el-icon>
               <User/>
             </el-icon>
-            <span>基本资料</span>
+            <span>个人资料</span>
+          </el-menu-item>
+          <el-menu-item index="/user">
+            <el-icon>
+              <User/>
+            </el-icon>
+            <span>用户管理</span>
+          </el-menu-item>
+          <el-menu-item index="/role">
+            <el-icon>
+              <User/>
+            </el-icon>
+            <span>角色管理</span>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
