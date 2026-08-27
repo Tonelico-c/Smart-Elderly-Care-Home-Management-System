@@ -11,6 +11,7 @@ import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -47,8 +48,8 @@ public class RoleController {
         return Result.ok("删除成功");
     }
     @DeleteMapping
-    public Result deleteBatch(@RequestBody List<Long> ids){
-        roleService.removeByIds(ids);
+    public Result deleteBatch(@RequestBody Long[] ids){
+        roleService.removeByIds(Arrays.asList(ids));
         return Result.ok("删除成功");
     }
 
