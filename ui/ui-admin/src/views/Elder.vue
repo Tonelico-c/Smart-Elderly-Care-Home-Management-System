@@ -237,6 +237,7 @@
                   type="primary" style="margin: 2px">{{ name }}</el-tag>
         </template>
       </el-table-column>
+
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">

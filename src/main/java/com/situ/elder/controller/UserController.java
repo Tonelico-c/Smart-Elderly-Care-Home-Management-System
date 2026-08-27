@@ -9,8 +9,10 @@ import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.service.IUserService;
 import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +53,17 @@ public class UserController {
         String token = JwtUtil.createToken(map);
         return Result.ok("登录成功",token);
     }
-
+    // 导出用户列表到Excel
+    @GetMapping("/exportExcel")
+    public void exportExcel(HttpServletResponse response) {
+        userService.exportExcel(response);
+    }
+    //导入
+    @PostMapping("/importExcel")
+    public Result importExcel(MultipartFile file) {
+        userService.importExcel(file);
+        return Result.ok();
+    }
 
     /**
      * 分页查询用户列表
