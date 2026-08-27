@@ -26,7 +26,15 @@
     tagQuery.value.page = 1
     localData()
   }
-
+  const resetSearch = () => {
+    tagQuery.value = {
+      code: '',
+      page: 1,
+      limit: 10
+    }
+    createTimeRange.value = []
+    localData()
+  }
   // 删除
   let ids = []
   const handleSelectionChange = (rows) => {
@@ -139,6 +147,9 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSearch">搜索</el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="default" @click="resetSearch">重置</el-button>
       </el-form-item>
     </el-form>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">

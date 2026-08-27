@@ -6,7 +6,15 @@
   import {ElMessage, ElMessageBox} from "element-plus";
   import {useTokenStore} from '@/store/token.js'
   import defaultAvatar from '@/assets/default.png'
+  import tagApi from "@/api/tag.js";
   const tokenStore = useTokenStore();
+
+  const allTags = ref([])
+  tagApi.list({page: 1, limit: 1000}).then(result => {
+    allTags.value = result.data.records
+  })
+  const selectedTagIds = ref([])
+
   const list = ref([])
   const total = ref(0)
 
@@ -21,6 +29,7 @@
   const loadData = () =>{
     elderQuery.value.beginCreateTime = createTimeRange.value?.[0];
     elderQuery.value.endCreateTime = createTimeRange.value?.[1];
+    elderQuery.value.tagIds = selectedTagIds.value.join(',')
     elderApi.list(elderQuery.value).then(result => {
       list.value = result.data.records
       total.value = result.data.total
@@ -30,6 +39,17 @@
 
   const onSearch = () => {
     elderQuery.value.page = 1
+    loadData()
+  }
+  const resetSearch = () => {
+    createTimeRange.value = []
+    selectedTagIds.value = []
+    elderQuery.value = {
+      name:'',
+      phone:'',
+      page:1,
+      limit:10
+    }
     loadData()
   }
 
@@ -174,6 +194,8 @@
       }
     });
   }
+
+
 </script>
 
 <template>
@@ -201,8 +223,19 @@
             end-placeholder="结束时间"
         />
       </el-form-item>
+      <el-form-item label="标签">
+        <el-select v-model="selectedTagIds" class="tag-select" multiple clearable collapse-tags
+                   :max-collapse-tags="3" collapse-tags-tooltip
+                   placeholder="请选择标签" style="width: 300px">
+          <el-option v-for="tag in allTags" :key="tag.id"
+                     :label="tag.name" :value="tag.id"/>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSearch">搜索</el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="default" @click="resetSearch">重置</el-button>
       </el-form-item>
     </el-form>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
@@ -329,6 +362,20 @@
 </template>
 
 <style scoped>
+/* 标签下拉框：禁止标签换行，避免选多了把搜索表单整行撑高 */
+.tag-select :deep(.el-select__selection) {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  /* 未选标签时占位符是绝对定位，容器高度会塌成 0 被 overflow 裁掉，给它一个最小高度 */
+  min-height: 24px;
+}
+/* 放不下的标签内容用省略号截断，保证 +N 折叠标签不被挤掉 */
+.tag-select :deep(.el-tag__content) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .avatar-uploader .el-upload {
   border: 1px dashed var(--el-border-color);
   border-radius: 6px;

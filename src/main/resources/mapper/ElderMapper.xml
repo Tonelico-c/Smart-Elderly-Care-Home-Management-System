@@ -32,6 +32,18 @@
             <if test="(elderQuery.beginCreateTime != null) and (elderQuery.endCreateTime != null)">
                 AND e.create_time BETWEEN #{elderQuery.beginCreateTime} AND #{elderQuery.endCreateTime}
             </if>
+            <if test="elderQuery.tagIds != null and elderQuery.tagIds.size() > 0">
+                AND e.id IN (
+                SELECT et2.elder_id
+                FROM elder_tag et2
+                WHERE et2.tag_id IN
+                <foreach collection="elderQuery.tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+                GROUP BY et2.elder_id
+                HAVING COUNT(DISTINCT et2.tag_id) = ${elderQuery.tagIds.size()}
+                )
+            </if>
         </where>
         GROUP BY e.id
     </select>
