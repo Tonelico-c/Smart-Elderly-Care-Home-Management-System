@@ -1,6 +1,6 @@
 package com.situ.elder.service;
 
-import com.situ.elder.pojo.UserRole;
+import com.situ.elder.pojo.entity.UserRole;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

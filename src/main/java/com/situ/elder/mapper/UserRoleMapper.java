@@ -1,6 +1,6 @@
 package com.situ.elder.mapper;
 
-import com.situ.elder.pojo.UserRole;
+import com.situ.elder.pojo.entity.UserRole;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

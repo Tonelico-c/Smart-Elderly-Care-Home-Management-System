@@ -38,6 +38,12 @@ const userApi = {
             //"blob": response 是一个包含二进制数据的 Blob 对象。
             responseType: 'blob'
         })
+    },
+    selectAssignedRole(userId){
+        return request.get(`/users/selectAssignedRole/${userId}`);
+    },
+    assignRole(userId, roleIds){
+        return request.post("/users/assignRole", null,{params: {userId, roleIds}});
     }
 }
 

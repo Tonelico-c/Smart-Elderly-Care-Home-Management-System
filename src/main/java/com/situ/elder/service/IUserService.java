@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.situ.elder.pojo.query.UserQuery;
+import com.situ.elder.pojo.vo.UserRoleVO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * <p>
@@ -24,4 +27,8 @@ public interface IUserService extends IService<User> {
     void importExcel(MultipartFile file);
 
     void add(User user);
+
+    UserRoleVO selectAssignedRole(Long userId);
+
+    void assignRole(Long userId, Long[] roleIds);
 }

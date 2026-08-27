@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.dto.UserPasswordDTO;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.pojo.query.UserQuery;
+import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IUserService;
 import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -94,6 +96,16 @@ public class UserController {
     }
 
     /**
+     * 根据用户ID查询已分配的角色
+     * GET /users/selectAssignedRole/1
+     */
+    @GetMapping("/selectAssignedRole/{userId}")
+    public Result<UserRoleVO> selectAssignedRole(@PathVariable Long userId){
+        UserRoleVO userRoleVO = userService.selectAssignedRole(userId);
+        return Result.ok(userRoleVO);
+    }
+
+    /**
      * 新增用户
      * POST /users
      */
@@ -111,6 +123,11 @@ public class UserController {
     public Result update(@RequestBody User user) {
         userService.updateById(user);
         return Result.ok("修改成功");
+    }
+    @PostMapping("/assignRole")
+    public Result assignRole(Long userId, Long[] roleIds){
+        userService.assignRole(userId, roleIds);
+        return Result.ok("分配角色成功");
     }
 
     @PutMapping("/resetPassword")

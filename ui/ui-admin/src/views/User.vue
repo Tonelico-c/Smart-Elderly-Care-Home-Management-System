@@ -201,6 +201,33 @@
       ElMessage.error(result.msg)
     }
   }
+
+  const dialogRoleVisible = ref(false)
+  const roleList = ref([])
+  const assignedRoleIdList = ref([])
+  // 显示角色对话框
+  const showRoleDialog = (row) => {
+    user.value = row
+    userApi.selectAssignedRole(row.id).then(result => {
+      roleList.value = result.data.roleList
+      assignedRoleIdList.value = result.data.assignedRoleIdList
+      dialogRoleVisible.value = true
+    })
+  }
+  // 分配角色
+  const assignRole = () => {
+    // 获取选中的角色ID
+    const roleIds = assignedRoleIdList.value.join(',');
+    userApi.assignRole(user.value.id, roleIds).then(result => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg)
+        dialogRoleVisible.value = false
+        loadData()
+      } else {
+        ElMessage.error(result.msg)
+      }
+    })
+  }
 </script>
 
 <template>
@@ -260,15 +287,14 @@
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
       <el-table-column fixed prop="id" label="ID"/>
-      <el-table-column prop="name" label="名字"/>
-      <el-table-column prop="password" label="密码"/>
-      <el-table-column prop="phone" label="电话"/>
-      <el-table-column prop="email" label="邮箱"/>
       <el-table-column prop="avatar" label="头像">
         <template #default="{row}">
           <img :src="row.avatar || defaultAvatar" alt="头像" class="table-avatar"/>
         </template>
       </el-table-column>
+      <el-table-column prop="name" label="用户名"/>
+      <el-table-column prop="phone" label="电话"/>
+      <el-table-column prop="email" label="邮箱"/>
       <el-table-column prop="status" label="状态" width="100px">
         <template #default="{row}">
           <el-switch
@@ -288,6 +314,7 @@
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
+          <el-button size="small" type="success" @click="showRoleDialog(row)">角色</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -302,8 +329,6 @@
       />
     </div>
   </el-card>
-
-
   <!--添加、编辑弹出框-->
   <el-dialog v-model="dialogFormVisible" :title="title" width="500" :lock-scroll="false" :close-on-click-modal="false">
     <el-form :model="user">
@@ -342,6 +367,24 @@
         </el-button>
       </div>
     </template>
+  </el-dialog>
+
+  <!-- 角色分配dialog-->
+  <el-dialog title="分配角色" v-model="dialogRoleVisible" width="40%">
+    <el-form ref="form" :model="user" label-width="80px">
+      <el-form-item label="用户名">
+        <el-input v-model="user.name" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="角色列表">
+        <el-checkbox-group v-model="assignedRoleIdList">
+          <el-checkbox v-for="role in roleList" :key="role.id" :label="role.id">{{role.name}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="assignRole">保存</el-button>
+        <el-button  @click="dialogRoleVisible = false">取消</el-button>
+      </el-form-item>
+    </el-form>
   </el-dialog>
 </template>
 

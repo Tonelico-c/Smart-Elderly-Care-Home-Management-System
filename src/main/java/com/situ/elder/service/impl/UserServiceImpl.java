@@ -7,10 +7,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.situ.elder.excelListener.UserExcelListener;
 import com.situ.elder.exception.ServiceException;
+import com.situ.elder.mapper.RoleMapper;
+import com.situ.elder.mapper.UserRoleMapper;
+import com.situ.elder.pojo.entity.Role;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.mapper.UserMapper;
+import com.situ.elder.pojo.entity.UserRole;
 import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.pojo.vo.UserExcelVO;
+import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.situ.elder.utils.ExcelUtil;
@@ -39,6 +44,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private RoleMapper roleMapper;
+    @Autowired
+    private UserRoleMapper userRoleMapper;
+
     @Override
     public IPage<User> list(UserQuery userQuery) {
         IPage<User> page = new Page<>(userQuery.getPage(), userQuery.getLimit());
@@ -90,5 +100,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         log.info("用户添加成功: {}", user);
         userMapper.insert(user);
+    }
+
+    @Override
+    public UserRoleVO selectAssignedRole(Long userId) {
+        // 查询所有角色
+        List<Role> roleList = roleMapper.selectList(null);
+        // 查询已分配的角色Id
+        List<Long> assignedRoleIdList = userRoleMapper.selectList(new QueryWrapper<UserRole>().eq("user_id", userId))
+                .stream().map(UserRole::getRoleId).toList();
+        UserRoleVO userRoleVO = new UserRoleVO();
+        userRoleVO.setRoleList(roleList);
+        userRoleVO.setAssignedRoleIdList(assignedRoleIdList);
+        return userRoleVO;
+    }
+
+    @Override
+    public void assignRole(Long userId, Long[] roleIds) {
+        // 删除原有角色
+        userRoleMapper.delete(new QueryWrapper<UserRole>().eq("user_id", userId));
+        // 添加新角色, 遍历roleIds数组, 将每个roleId与userId组合成UserRole对象并插入数据库
+        for (Long roleId : roleIds) {
+            UserRole userRole = new UserRole();
+            userRole.setUserId(userId);
+            userRole.setRoleId(roleId);
+            userRoleMapper.insert(userRole);
+        }
     }
 }

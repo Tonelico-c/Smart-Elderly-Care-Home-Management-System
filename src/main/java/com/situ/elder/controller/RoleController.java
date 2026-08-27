@@ -4,7 +4,9 @@ package com.situ.elder.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Role;
 import com.situ.elder.pojo.query.RoleQuery;
+import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IRoleService;
+import com.situ.elder.service.impl.UserServiceImpl;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,8 @@ public class RoleController {
 
     @Autowired
     private IRoleService roleService;
+    @Autowired
+    private UserServiceImpl userServiceImpl;
 
     @GetMapping
     public Result<IPage<Role>> list(RoleQuery roleQuery){
@@ -36,8 +40,6 @@ public class RoleController {
     public Result<Role> selectById(@PathVariable Long id){
         return Result.ok(roleService.getById(id));
     }
-
-
 
     @DeleteMapping("/{id}")
     public Result deleteById(@PathVariable Long id){
@@ -56,13 +58,11 @@ public class RoleController {
         return Result.ok("添加成功");
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public Result update(@RequestBody Role role){
         roleService.updateById(role);
         return Result.ok("修改成功");
     }
-
-
 
 }
 
