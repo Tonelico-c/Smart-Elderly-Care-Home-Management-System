@@ -2,8 +2,11 @@ import request from "@/utils/request.js";
 
 
 const permissionApi = {
-    list(permissionQuery){
+    /*list(permissionQuery){
         return request.get("/permissions", {params: permissionQuery});
+    },*/
+    selectPermissionTree(){
+        return request.get("/permissions/selectPermissionTree");
     },
     selectById(id){
         return request.get(`/permissions/${id}`);

@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.situ.elder.pojo.query.PermissionQuery;
 import com.situ.elder.pojo.vo.PermissionVO;
 
+import java.util.List;
+
 /**
  * <p>
  * 权限表 服务类
@@ -16,7 +18,9 @@ import com.situ.elder.pojo.vo.PermissionVO;
  */
 public interface IPermissionService extends IService<Permission> {
 
-    IPage<Permission> list(PermissionQuery permissionQuery);
+//    IPage<Permission> list(PermissionQuery permissionQuery);
 
     PermissionVO getPermissionVO();
+
+    List<PermissionVO> selectPermissionTree();
 }

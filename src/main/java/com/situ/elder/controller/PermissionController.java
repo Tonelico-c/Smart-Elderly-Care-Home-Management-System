@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -26,11 +27,17 @@ public class PermissionController {
     @Autowired
     private IPermissionService permissionService;
 
-    @GetMapping
+    @GetMapping("selectPermissionTree")
+    public Result<List<PermissionVO>> selectPermissionTree(){
+        List<PermissionVO> permissionVOList = permissionService.selectPermissionTree();
+        return Result.ok(permissionVOList);
+    }
+
+    /*@GetMapping
     public Result<IPage<Permission>> list(PermissionQuery permissionQuery){
         IPage<Permission> page = permissionService.list(permissionQuery);
         return Result.ok(page);
-    }
+    }*/
 
     @GetMapping("/{id}")
     public Result<Permission> selectById(@PathVariable Long id){

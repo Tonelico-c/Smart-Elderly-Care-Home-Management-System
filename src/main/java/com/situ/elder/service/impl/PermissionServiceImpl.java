@@ -9,6 +9,7 @@ import com.situ.elder.pojo.query.PermissionQuery;
 import com.situ.elder.pojo.vo.PermissionVO;
 import com.situ.elder.service.IPermissionService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -29,7 +30,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
     @Autowired
     private PermissionMapper permissionMapper;
 
-    @Override
+    /*@Override
     public IPage<Permission> list(PermissionQuery permissionQuery) {
         IPage<Permission> page = new Page<>(permissionQuery.getPage(), permissionQuery.getLimit());
 
@@ -40,7 +41,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
                         .between(!ObjectUtils.isEmpty(permissionQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(permissionQuery.getEndCreateTime()), Permission::getCreateTime, permissionQuery.getBeginCreateTime(), permissionQuery.getEndCreateTime());
 
         return permissionMapper.selectPage(page, lambdaQueryWrapper);
-    }
+    }*/
 
     @Override
     public PermissionVO getPermissionVO() {
@@ -49,5 +50,38 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
         List<Long> paretIdlist = permissions.stream().map(Permission::getParentId).distinct().toList();
         permissionVO.setParentIds(paretIdlist);
         return permissionVO;
+    }
+
+    @Override
+    public List<PermissionVO> selectPermissionTree() {
+        LambdaQueryWrapper<Permission> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.orderByAsc(Permission::getSort);
+        // 按sort升序排序，查出所有权限
+        List<Permission> permissionList = permissionMapper.selectList(lambdaQueryWrapper);
+        // 转为PermissionVO集合
+        List<PermissionVO> permissionVOList = permissionList.stream().map(permission -> {
+            PermissionVO permissionVO = new PermissionVO();
+            BeanUtils.copyProperties(permission, permissionVO);
+            return permissionVO;
+        }).toList();
+
+        // 构建一级父节点集合
+        List<PermissionVO> permissionVOTree = permissionVOList.stream()
+                .filter(permissionVO -> permissionVO.getParentId() == 0)
+                .map(permissionVO -> {
+                    permissionVO.setChildren(buildChildTree(permissionVO, permissionVOList)); // 构建children
+                    return permissionVO;
+                }).toList();
+
+        return permissionVOTree;
+    }
+
+    // 构建子节点树
+    public List<PermissionVO> buildChildTree(PermissionVO parentPermissionVO, List<PermissionVO> permissionVOList){
+        return permissionVOList.stream().filter(permissionVO -> permissionVO.getParentId().equals(parentPermissionVO.getId()))
+                .map(permissionVO -> {
+                    permissionVO.setChildren(buildChildTree(permissionVO, permissionVOList)); // 构建子节点的children
+                    return permissionVO;
+                }).toList();
     }
 }
