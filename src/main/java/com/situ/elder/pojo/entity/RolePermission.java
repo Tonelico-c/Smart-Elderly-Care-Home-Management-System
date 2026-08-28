@@ -12,34 +12,25 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- * 员工-角色关联表
+ * 角色权限表
  * </p>
  *
  * @author Gao
- * @since 2026-08-27
+ * @since 2026-08-28
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class UserRole implements Serializable {
+public class RolePermission implements Serializable {
 
 
-    /**
-     * 主键id
-     */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 角色id
-     */
     @TableField("role_id")
     private Long roleId;
 
-    /**
-     * 用户id
-     */
-    @TableField("user_id")
-    private Long userId;
+    @TableField("permission_id")
+    private Long permissionId;
 
 
     /**

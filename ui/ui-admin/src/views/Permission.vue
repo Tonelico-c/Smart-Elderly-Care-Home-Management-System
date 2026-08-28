@@ -232,29 +232,29 @@
   <!--添加、编辑弹出框-->
   <el-dialog v-model="dialogFormVisible" :title="title" width="500" :lock-scroll="false" :close-on-click-modal="false">
     <el-form :model="permission">
-      <el-form-item label="名字" :label-width="60">
+      <el-form-item label="名字" :label-width="80">
         <el-input v-model="permission.name" autocomplete="off" />
       </el-form-item>
-      <el-form-item label="父级权限" :label-width="60">
+      <el-form-item label="父级权限" :label-width="80">
         <el-select v-model="permission.parentId" placeholder="请选择父级权限" clearable style="width: 100%">
           <el-option label="无" value=""></el-option>
           <el-option v-for="item in permissionList" :key="item" :label="item.name" :value="item"></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="类型" :label-width="60">
+      <el-form-item label="类型" :label-width="80">
         <el-select v-model="permission.type" placeholder="请选择类型" clearable style="width: 100%">
           <el-option label="无" value="0"></el-option>
           <el-option label="菜单" value="1"></el-option>
           <el-option label="按钮" value="2"></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="路径" :label-width="60">
+      <el-form-item label="路径" :label-width="80">
         <el-input v-model="permission.path" autocomplete="off" />
       </el-form-item>
-      <el-form-item label="图标" :label-width="60">
+      <el-form-item label="图标" :label-width="80">
         <el-input v-model="permission.icon" autocomplete="off" />
       </el-form-item>
-      <el-form-item label="权限值" :label-width="60">
+      <el-form-item label="权限值" :label-width="80">
         <el-input v-model="permission.permissionValue" autocomplete="off" />
       </el-form-item>
     </el-form>

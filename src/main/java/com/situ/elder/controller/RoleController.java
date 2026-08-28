@@ -3,7 +3,9 @@ package com.situ.elder.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Role;
+import com.situ.elder.pojo.query.PageQuery;
 import com.situ.elder.pojo.query.RoleQuery;
+import com.situ.elder.pojo.vo.PermissionVO;
 import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IRoleService;
 import com.situ.elder.service.impl.UserServiceImpl;
@@ -12,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * <p>
@@ -40,6 +41,12 @@ public class RoleController {
     @GetMapping("/{id}")
     public Result<Role> selectById(@PathVariable Long id){
         return Result.ok(roleService.getById(id));
+    }
+
+    @GetMapping("/selectRelatedPermission/{roleId}")
+    public Result<IPage<PermissionVO>> selectRelatedPermission(PageQuery pageQuery, @PathVariable Long roleId){
+        IPage<PermissionVO> page = roleService.selectRelatedPermission(pageQuery, roleId);
+        return Result.ok(page);
     }
 
     @DeleteMapping("/{id}")

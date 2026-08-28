@@ -124,6 +124,23 @@
       })
     }
   }
+
+  const dialogRolePermissionVisible = ref(false)
+  const assignPermission = ref([])
+  const pageQuery = ref({ page: 1, limit: 10 })
+  const permissionTotal = ref(0)
+  const loadPermission = () => {
+    roleApi.selectRelatedPermission(role.value.id, pageQuery.value).then(result => {
+      assignPermission.value = result.data.records
+      permissionTotal.value = result.data.total
+    })
+  }
+  const showRolePermission = row => {
+    role.value = row
+    pageQuery.value = { page: 1, limit: 10 }
+    loadPermission()
+    dialogRolePermissionVisible.value = true
+  }
 </script>
 
 <template>
@@ -179,6 +196,7 @@
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
+          <el-button size="small" type="success" @click="showRolePermission(row)">权限</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -215,8 +233,50 @@
       </div>
     </template>
   </el-dialog>
+  <!--! 权限弹出框-->
+  <el-dialog v-model="dialogRolePermissionVisible" :title="`角色【${role.name}】的相关权限`" width="900" :lock-scroll="false">
+    <el-table :data="assignPermission" border style="width: 100%">
+      <el-table-column prop="id" label="ID" width="100"/>
+      <el-table-column prop="parentId" label="父级权限" width="100"/>
+      <el-table-column prop="name" label="权限名" width="200"/>
+      <el-table-column label="状态" width="90">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 1 ? 'success' : 'info'">
+            {{ {0: '禁用', 1: '启用'}[row.status] }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="permissionValue" label="权限值" show-overflow-tooltip/>
+    </el-table>
+    <div class="pagination-wrapper">
+      <el-pagination
+          v-model:current-page="pageQuery.page"
+          v-model:page-size="pageQuery.limit"
+          :page-sizes="[10, 20, 30, 40]"
+          layout="total, sizes, prev, pager, next"
+          :total="permissionTotal"
+          @change="loadPermission"
+      />
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogRolePermissionVisible = false">关闭</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
 
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
 </style>

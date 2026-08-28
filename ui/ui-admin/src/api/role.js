@@ -19,6 +19,9 @@ const roleApi = {
     },
     selectById(id){
         return request.get(`/roles/${id}`);
+    },
+    selectRelatedPermission(roleId, pageQuery){
+        return request.get(`/roles/selectRelatedPermission/${roleId}`, {params: pageQuery})
     }
 }
 
