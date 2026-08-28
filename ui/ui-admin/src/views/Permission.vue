@@ -255,7 +255,7 @@
       </el-form-item>
       <el-form-item label="类型" :label-width="80">
         <el-select v-model="permission.type" placeholder="请选择类型" clearable style="width: 100%">
-          <el-option label="无" value="0"></el-option>
+          <el-option label="目录" value="0"></el-option>
           <el-option label="菜单" value="1"></el-option>
           <el-option label="按钮" value="2"></el-option>
         </el-select>

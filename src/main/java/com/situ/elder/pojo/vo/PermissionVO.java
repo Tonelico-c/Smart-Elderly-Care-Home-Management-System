@@ -8,5 +8,7 @@ import java.util.List;
 @Data
 public class PermissionVO extends Permission {
 
+    private List<PermissionVO> children;
+
     private List<Long> parentIds;
 }
