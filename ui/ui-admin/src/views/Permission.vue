@@ -1,9 +1,14 @@
 <script setup>
 
-  import {Delete, Plus, Refresh, Search} from "@element-plus/icons-vue";
+  import {
+    Delete,
+    Plus,
+    Refresh,
+    Search,
+  } from "@element-plus/icons-vue";
   import {ref} from "vue";
-  import permissionApi from "@/api/permission.js";
-  import {ElMessage, ElMessageBox} from "element-plus";
+  import permissionApi from "@/api/permission.js"
+  import {ElMessage, ElMessageBox} from "element-plus"
 
   const permissionQuery = ref({
     parentId:'',
@@ -194,7 +199,14 @@
       <el-table-column prop="type" label="类型" width="100"/>
       <el-table-column prop="path" label="路径" width="120"/>
       <el-table-column prop="permissionValue" label="权限值" width="120"/>
-      <el-table-column prop="icon" label="图标" width="100"/>
+      <el-table-column prop="icon" label="图标" width="100">
+        <template #default="{row}">
+          <!-- 数据库存的是图标名(如 "User"),全局注册后 <component :is> 按名字解析 -->
+          <el-icon v-if="row.icon">
+            <component :is="row.icon"/>
+          </el-icon>
+        </template>
+      </el-table-column>
       <el-table-column prop="sort" label="排序" width="50"/>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{row}">

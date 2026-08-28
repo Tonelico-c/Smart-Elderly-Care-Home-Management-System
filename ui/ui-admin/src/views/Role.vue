@@ -187,12 +187,12 @@
     </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column fixed prop="id" label="ID"/>
-      <el-table-column prop="name" label="名字"/>
-      <el-table-column prop="code" label="编码"/>
-      <el-table-column prop="description" label="权限描述"/>
-      <el-table-column prop="createTime" label="创建时间" width="200px"/>
-      <el-table-column align="center" width="200px" fixed="right" label="操作">
+      <el-table-column fixed prop="id" label="ID" width="50"/>
+      <el-table-column prop="name" label="名字" width="150"/>
+      <el-table-column prop="code" label="编码" width="150"/>
+      <el-table-column prop="description" label="权限描述" width="400"/>
+      <el-table-column prop="createTime" label="创建时间" width="200"/>
+      <el-table-column align="center" width="250" fixed="right" label="操作">
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
