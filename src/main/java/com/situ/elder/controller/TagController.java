@@ -41,12 +41,6 @@ public class TagController {
         return Result.ok(tag);
     }
 
-    /*@GetMapping("/selectRelatedElder/{tagId}")
-    public Result<List<ElderVo>> selectRelatedElder(@PathVariable Long tagId){
-        List<ElderVo> elderVos = tagService.selectRelatedElder(tagId);
-        return Result.ok(elderVos);
-    }*/
-
     @DeleteMapping("/{id}")
     public Result deleteById(@PathVariable Long id){
         tagService.removeById(id);
