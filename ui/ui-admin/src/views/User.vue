@@ -286,16 +286,16 @@
     </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column fixed prop="id" label="ID"/>
-      <el-table-column prop="avatar" label="头像">
+      <el-table-column fixed prop="id" label="ID" width="100"/>
+      <el-table-column prop="avatar" label="头像" width="100">
         <template #default="{row}">
           <img :src="row.avatar || defaultAvatar" alt="头像" class="table-avatar"/>
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="用户名"/>
-      <el-table-column prop="phone" label="电话"/>
-      <el-table-column prop="email" label="邮箱"/>
-      <el-table-column prop="status" label="状态" width="100px">
+      <el-table-column prop="name" label="用户名" width="150"/>
+      <el-table-column prop="phone" label="电话" width="150"/>
+      <el-table-column prop="email" label="邮箱" width="200"/>
+      <el-table-column prop="status" label="状态" >
         <template #default="{row}">
           <el-switch
               v-model="row.status"

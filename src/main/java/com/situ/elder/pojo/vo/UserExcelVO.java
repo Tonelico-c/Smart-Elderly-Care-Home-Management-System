@@ -8,7 +8,7 @@ import java.util.Date;
 @Data
 public class UserExcelVO {
     /**
-     * 课程id
+     * 用户id
      */
     @ExcelProperty(value = "用户id")
     private Long id;

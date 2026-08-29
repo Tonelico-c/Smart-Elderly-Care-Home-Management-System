@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.situ.elder.pojo.query.ElderQuery;
 import com.situ.elder.pojo.vo.ElderVo;
 
+import java.util.List;
+
 /**
  * <p>
  * 老人表 Mapper 接口
@@ -17,4 +19,6 @@ import com.situ.elder.pojo.vo.ElderVo;
 public interface ElderMapper extends BaseMapper<Elder> {
 
     IPage<ElderVo> list(IPage<ElderVo> voPage, ElderQuery elderQuery);
+
+    List<ElderVo> selectElderVoList();
 }

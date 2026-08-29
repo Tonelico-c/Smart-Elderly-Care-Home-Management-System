@@ -27,6 +27,7 @@ public class JwtUtil {
                 .asMap();
     }
 
+    // 测试
     public static void main(String[] args) {
         Map<String, Object> map = new HashMap<>();
         map.put("name", "zhangsan");

@@ -5,6 +5,7 @@ import com.situ.elder.pojo.entity.Elder;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.situ.elder.pojo.query.ElderQuery;
 import com.situ.elder.pojo.vo.ElderVo;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
 
@@ -23,4 +24,6 @@ public interface IElderService extends IService<Elder> {
     Map<String, Object> selectAssignedTag(Long elderId);
 
     void assignTag(Long elderId, Long[] tagIds);
+
+    void exportExcel(HttpServletResponse response);
 }

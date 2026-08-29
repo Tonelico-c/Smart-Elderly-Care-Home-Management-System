@@ -20,7 +20,7 @@ public interface IPermissionService extends IService<Permission> {
 
 //    IPage<Permission> list(PermissionQuery permissionQuery);
 
-    PermissionVO getPermissionVO();
+//    PermissionVO getPermissionVO();
 
     List<PermissionVO> selectPermissionTree();
 }

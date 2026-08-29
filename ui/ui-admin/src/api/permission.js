@@ -23,9 +23,9 @@ const permissionApi = {
     deleteBatch(ids){
         return request.delete("/permissions", {data: ids});
     },
-    selectParentId(){
+    /*selectParentId(){
         return request.get("/permissions/permissionVO");
-    }
+    }*/
 }
 
 export default permissionApi

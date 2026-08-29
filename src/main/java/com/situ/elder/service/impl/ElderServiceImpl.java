@@ -10,9 +10,12 @@ import com.situ.elder.mapper.ElderMapper;
 import com.situ.elder.pojo.entity.ElderTag;
 import com.situ.elder.pojo.entity.Tag;
 import com.situ.elder.pojo.query.ElderQuery;
+import com.situ.elder.pojo.vo.ElderExcelVO;
 import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.IElderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.situ.elder.utils.ExcelUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -125,5 +128,39 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
             eldertag.setTagId(tagId);
             elderTagMapper.insert(eldertag);
         }
+    }
+
+    @Override
+    public void exportExcel(HttpServletResponse response) {
+        List<ElderVo> elderVoList = elderMapper.selectElderVoList();
+
+        List<ElderExcelVO> elderExcelVOList = elderVoList.stream()
+                        .map(elderVo -> {
+                            ElderExcelVO elderExcelVO = new ElderExcelVO();
+                            BeanUtils.copyProperties(elderVo, elderExcelVO);
+                            switch (elderVo.getStatus()){
+                                case 0:
+                                    elderExcelVO.setStatusRemark("禁用");
+                                    break;
+                                case 1:
+                                    elderExcelVO.setStatusRemark("启用");
+                                    break;
+                                case 2:
+                                    elderExcelVO.setStatusRemark("请假");
+                                    break;
+                                case 3:
+                                    elderExcelVO.setStatusRemark("退住中");
+                                    break;
+                                case 4:
+                                    elderExcelVO.setStatusRemark("入住中");
+                                    break;
+                                case 5:
+                                    elderExcelVO.setStatusRemark("已退住");
+                                    break;
+                            }
+                            return elderExcelVO;
+                        }).toList();
+
+        ExcelUtil.exportExcel(response,elderExcelVOList,ElderExcelVO.class,"老人信息表");
     }
 }

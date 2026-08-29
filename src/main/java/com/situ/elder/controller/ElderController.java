@@ -7,6 +7,7 @@ import com.situ.elder.pojo.query.ElderQuery;
 import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.IElderService;
 import com.situ.elder.utils.Result;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +45,11 @@ public class ElderController {
     public Result<Map<String, Object>> selectAssignedTag(@PathVariable Long elderId){
         Map<String, Object> map = elderService.selectAssignedTag(elderId);
         return Result.ok(map);
+    }
+
+    @GetMapping("/exportExcel")
+    public void exportExcel(HttpServletResponse response){
+        elderService.exportExcel(response);
     }
 
     @PostMapping

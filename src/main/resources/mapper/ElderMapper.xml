@@ -47,4 +47,13 @@
         </where>
         GROUP BY e.id
     </select>
+    <select id="selectElderVoList" resultMap="ElderVoMap">
+        SELECT e.*, GROUP_CONCAT(t.name ORDER BY t.id SEPARATOR ',') AS tag_names
+        FROM elder AS e LEFT JOIN elder_tag AS et
+                                  ON e.id  = et.elder_id
+                        LEFT JOIN tag AS t
+                                  ON et.tag_id = t.id AND t.deleted = 0
+        WHERE e.deleted = 0
+        GROUP BY e.id
+    </select>
 </mapper>

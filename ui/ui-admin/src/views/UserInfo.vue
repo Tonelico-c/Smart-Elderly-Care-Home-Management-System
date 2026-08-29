@@ -23,6 +23,9 @@
       </el-descriptions-item>
       <el-descriptions-item label="创建时间">{{ user.createTime }}</el-descriptions-item>
       <el-descriptions-item label="修改时间">{{ user.updateTime }}</el-descriptions-item>
+      <el-descriptions-item label="头像">
+        <img :src="user.avatar" alt="头像" style="width: 120px; height: 150px; border-radius: 50%">
+      </el-descriptions-item>
     </el-descriptions>
   </el-card>
 </template>

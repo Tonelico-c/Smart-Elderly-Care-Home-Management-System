@@ -44,11 +44,11 @@ public class PermissionController {
         return Result.ok(permissionService.getById(id));
     }
 
-    @GetMapping("/permissionVO")
+    /*@GetMapping("/permissionVO")
     public Result<PermissionVO> getPermissionVO(){
         PermissionVO permissionVO = permissionService.getPermissionVO();
         return Result.ok(permissionVO);
-    }
+    }*/
 
     @PostMapping
     public Result<Permission> add(@RequestBody Permission permission){

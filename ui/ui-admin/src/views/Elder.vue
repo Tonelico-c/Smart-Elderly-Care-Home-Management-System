@@ -2,7 +2,7 @@
 
   import {ref} from "vue";
   import elderApi from "@/api/elder.js";
-  import {Delete, Plus, Search, Refresh} from "@element-plus/icons-vue";
+  import {Delete, Plus, Search, Refresh, Download} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
   import {useTokenStore} from '@/store/token.js'
   import defaultAvatar from '@/assets/default.png'
@@ -196,7 +196,24 @@
     });
   }
 
-
+  // 导出Excel
+  const exportExcel = () => {
+    elderApi.exportExcel().then((result) => {
+      //从响应头 Content-Disposition 解析后端返回的文件名,后端做过 URLEncoder.encode,需要解码
+      const disposition = result.headers['content-disposition'];
+      let fileName = '导出数据.xlsx'; //兜底名
+      if (disposition) {
+        fileName = decodeURIComponent(disposition.split('filename=')[1]);
+      }
+      //responseType 为 blob 时 result.data 本身就是 Blob,直接用即可
+      let url = window.URL.createObjectURL(result.data);
+      const link = document.createElement("a"); // 创建a标签
+      link.href = url;
+      link.download = fileName; // 使用后端返回的文件名
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+  }
 </script>
 
 <template>
@@ -248,6 +265,7 @@
     <div class="toolbar">
       <el-button type="primary" :icon="Plus" @click="showAddDialog">添加</el-button>
       <el-button type="danger" :icon="Delete" @click="deleteAll">批量删除</el-button>
+      <el-button type="success" :icon="Download" @click="exportExcel">导出为Excel</el-button>
     </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />

@@ -7,8 +7,6 @@ const pinia = createPinia()
 import ElementPlus from 'element-plus' //导入element-plus
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css' //导入element-plus样式
-//导入element-plus的全部图标
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 //引入持久化插件
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate"
@@ -16,9 +14,12 @@ import piniaPluginPersistedstate from "pinia-plugin-persistedstate"
 pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
-//批量全局注册所有图标组件
-//注册后,数据库里存图标名(如 "User"、"Setting"),模板里 <component :is="row.icon"/> 就能解析到
-for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(name, component)
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+// 全局挂载和注册 element-plus 的所有 icon
+app.config.globalProperties.$icons = []
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.config.globalProperties.$icons.push(key)
+  app.component(key, component)
 }
+
 app.use(router).use(pinia).use(ElementPlus, {locale: zhCn }).mount('#app')
