@@ -10,6 +10,7 @@ import Elder from '@/views/Elder.vue'
 import UserInfo from "@/views/UserInfo.vue";
 import Tag from "@/views/Tag.vue";
 import CareItem from "@/views/CareItem.vue";
+import CareLevel from "@/views/CareLevel.vue";
 import Role from "@/views/Role.vue";
 import Permission from "@/views/Permission.vue";
 
@@ -30,6 +31,7 @@ const router = createRouter({
                 {path: '/user/info', component: UserInfo},
                 {path: '/tag', component: Tag},
                 {path: '/care-item', component: CareItem},
+                {path: '/care-level', component: CareLevel},
                 {path: '/role', component: Role},
                 {path:'/permission', component: Permission}
             ]
