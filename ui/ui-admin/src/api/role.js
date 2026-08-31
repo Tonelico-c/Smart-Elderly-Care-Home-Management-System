@@ -20,8 +20,11 @@ const roleApi = {
     selectById(id){
         return request.get(`/roles/${id}`);
     },
-    selectRelatedPermission(roleId, pageQuery){
-        return request.get(`/roles/selectRelatedPermission/${roleId}`, {params: pageQuery})
+    selectAssignedPermission(roleId) {
+        return request.get(`/roles/selectAssignedPermission/${roleId}`)
+    },
+    assignPermission(roleId, permissionIds) {
+        return request.post('/roles/assignPermission', null, {params: {roleId, permissionIds}})
     }
 }
 

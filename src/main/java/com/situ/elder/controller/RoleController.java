@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * <p>
@@ -32,6 +33,19 @@ public class RoleController {
     @Autowired
     private UserServiceImpl userServiceImpl;
 
+    @GetMapping("/selectAssignedPermission/{roleId}")
+    public Result selectAssignedPermission(@PathVariable("roleId") Long roleId) {
+        Map<String, Object> map = roleService.selectAssignedPermission(roleId);
+        return Result.ok(map);
+    }
+
+    @PostMapping("/assignPermission")
+    public Result assignPermission(Long roleId, Long[] permissionIds) {
+        roleService.assignPermission(roleId, permissionIds);
+        return Result.ok("分配成功");
+    }
+
+
     @GetMapping
     public Result<IPage<Role>> list(RoleQuery roleQuery){
         IPage<Role> page = roleService.list(roleQuery);
@@ -41,12 +55,6 @@ public class RoleController {
     @GetMapping("/{id}")
     public Result<Role> selectById(@PathVariable Long id){
         return Result.ok(roleService.getById(id));
-    }
-
-    @GetMapping("/selectRelatedPermission/{roleId}")
-    public Result<IPage<PermissionVO>> selectRelatedPermission(PageQuery pageQuery, @PathVariable Long roleId){
-        IPage<PermissionVO> page = roleService.selectRelatedPermission(pageQuery, roleId);
-        return Result.ok(page);
     }
 
     @DeleteMapping("/{id}")

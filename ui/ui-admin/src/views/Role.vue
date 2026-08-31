@@ -125,21 +125,53 @@
     }
   }
 
-  const dialogRolePermissionVisible = ref(false)
-  const assignPermission = ref([])
-  const pageQuery = ref({ page: 1, limit: 10 })
-  const permissionTotal = ref(0)
-  const loadPermission = () => {
-    roleApi.selectRelatedPermission(role.value.id, pageQuery.value).then(result => {
-      assignPermission.value = result.data.records
-      permissionTotal.value = result.data.total
-    })
+  //权限分配的树形结构
+  const dialogPermissionVisible = ref(false)
+  const treeData = ref([])
+  const treeRef = ref()
+  const defaultProps = ref({
+    children: 'children',
+    label: 'name'
+  })
+  const showAssignedPermissionDialog = (row) => {
+    role.value = row;
+    dialogPermissionVisible.value = true;
+    treeData.value = [];
+    roleApi.selectAssignedPermission(row.id).then((result) => {
+      if (result.code === 1) {
+        treeData.value = result.data.permissionVOList;
+        let checkedLeafIdList = [];
+        //找到所有这个角色已经分配的权限里面的叶子权限
+        getCheckedLeafIdList(result.data.permissionVOList, result.data.assignedPermissionIds, checkedLeafIdList);
+        treeRef.value.setCheckedKeys(checkedLeafIdList);
+      }
+    });
   }
-  const showRolePermission = row => {
-    role.value = row
-    pageQuery.value = { page: 1, limit: 10 }
-    loadPermission()
-    dialogRolePermissionVisible.value = true
+
+  const getCheckedLeafIdList = (permissionVOList, assignedPermissionIds, checkedLeafIdList) => {
+    permissionVOList.forEach(permissionVO => {
+      assignedPermissionIds.forEach(id => {
+        //这个角色下面的权限，而且是没有孩子的叶子节点
+        if (permissionVO.id===id && permissionVO.children.length === 0) {
+          checkedLeafIdList.push(id);
+        } else if(permissionVO.id===id && permissionVO.children.length !== 0) {
+          getCheckedLeafIdList(permissionVO.children, assignedPermissionIds, checkedLeafIdList);
+        }
+      })
+    });
+  }
+
+  const assignPermission = () => {
+    let checkedNodes = treeRef.value.getCheckedNodes(false, true);
+    console.log(checkedNodes);
+    let permissionIds = checkedNodes.map((node) => node.id);
+    permissionIds = permissionIds.join(',');
+    roleApi.assignPermission(role.value.id, permissionIds).then((result) => {
+      if (result.code === 1) {
+        ElMessage({message: result.msg, type: 'success',})
+        dialogPermissionVisible.value = false;
+      }
+    });
   }
 </script>
 
@@ -196,7 +228,7 @@
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
-          <el-button size="small" type="success" @click="showRolePermission(row)">权限</el-button>
+          <el-button size="small" type="success" @click="showAssignedPermissionDialog(row)">权限</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -233,34 +265,23 @@
       </div>
     </template>
   </el-dialog>
-  <!--! 权限弹出框-->
-  <el-dialog v-model="dialogRolePermissionVisible" :title="`角色【${role.name}】的相关权限`" width="900" :lock-scroll="false">
-    <el-table :data="assignPermission" border style="width: 100%">
-      <el-table-column prop="id" label="ID" width="100"/>
-      <el-table-column prop="parentId" label="父级权限" width="100"/>
-      <el-table-column prop="name" label="权限名" width="200"/>
-      <el-table-column label="状态" width="90">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'">
-            {{ {0: '禁用', 1: '启用'}[row.status] }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="permissionValue" label="权限值" show-overflow-tooltip/>
-    </el-table>
-    <div class="pagination-wrapper">
-      <el-pagination
-          v-model:current-page="pageQuery.page"
-          v-model:page-size="pageQuery.limit"
-          :page-sizes="[10, 20, 30, 40]"
-          layout="total, sizes, prev, pager, next"
-          :total="permissionTotal"
-          @change="loadPermission"
-      />
-    </div>
+  <!--    权限分配的dialog-->
+  <el-dialog
+      title="分配权限"
+      v-model="dialogPermissionVisible"
+      width="40%" :lock-scroll="false">
+    <el-tree
+        :data="treeData"
+        ref="treeRef"
+        show-checkbox
+        node-key="id"
+        default-expand-all
+        :props="defaultProps">
+    </el-tree>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="dialogRolePermissionVisible = false">关闭</el-button>
+        <el-button type="primary" @click="assignPermission()">保存</el-button>
+        <el-button  @click="dialogPermissionVisible = false">取消</el-button>
       </div>
     </template>
   </el-dialog>

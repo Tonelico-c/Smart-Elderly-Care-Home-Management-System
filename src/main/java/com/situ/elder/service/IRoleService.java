@@ -7,6 +7,8 @@ import com.situ.elder.pojo.query.PageQuery;
 import com.situ.elder.pojo.query.RoleQuery;
 import com.situ.elder.pojo.vo.PermissionVO;
 
+import java.util.Map;
+
 /**
  * <p>
  * 角色表 服务类
@@ -19,5 +21,7 @@ public interface IRoleService extends IService<Role> {
 
     IPage<Role> list(RoleQuery roleQuery);
 
-    IPage<PermissionVO> selectRelatedPermission(PageQuery pageQuery, Long roleId);
+    Map<String, Object> selectAssignedPermission(Long roleId);
+
+    void assignPermission(Long roleId, Long[] permissionIds);
 }
