@@ -7,6 +7,7 @@ import com.situ.elder.pojo.query.PermissionQuery;
 import com.situ.elder.pojo.vo.PermissionVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -23,4 +24,6 @@ public interface IPermissionService extends IService<Permission> {
 //    PermissionVO getPermissionVO();
 
     List<PermissionVO> selectPermissionTree();
+
+    Map<String, Object> selectPermissionByUserId(Long id);
 }

@@ -7,6 +7,7 @@
   import {useTokenStore} from '@/store/token.js'
   import defaultAvatar from '@/assets/default.png'
   import tagApi from "@/api/tag.js";
+  import hasBtnPermission from "@/utils/btnPermission.js";
   const tokenStore = useTokenStore();
 
   // 存储所有标签的Id
@@ -263,8 +264,8 @@
       </el-form>
     </template>
     <div class="toolbar">
-      <el-button type="primary" :icon="Plus" @click="showAddDialog">添加</el-button>
-      <el-button type="danger" :icon="Delete" @click="deleteAll">批量删除</el-button>
+      <el-button type="primary" :icon="Plus" @click="showAddDialog" :disabled="!hasBtnPermission('elder:add')">添加</el-button>
+      <el-button type="danger" :icon="Delete" @click="deleteAll" :disabled="!hasBtnPermission('elder:delete')">批量删除</el-button>
       <el-button type="success" :icon="Download" @click="exportExcel">导出为Excel</el-button>
     </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
@@ -303,9 +304,9 @@
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">
-          <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
-          <el-button size="small" type="success" @click="showAssignedTagDialog(row)">标签</el-button>
+          <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" :disabled="!hasBtnPermission('elder:update')">编辑</el-button>
+          <el-button size="small" type="danger" @click="deleteById(row.id)"  :disabled="!hasBtnPermission('elder:delete')">删除</el-button>
+          <el-button size="small" type="success" @click="showAssignedTagDialog(row)" :disabled="!hasBtnPermission('elder:setTag')">标签</el-button>
         </template>
       </el-table-column>
     </el-table>

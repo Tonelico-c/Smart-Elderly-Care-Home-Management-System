@@ -4,6 +4,7 @@
   import {ref} from "vue";
   import roleApi from "@/api/role.js";
   import {ElMessage, ElMessageBox} from "element-plus";
+  import hasBtnPermission from "@/utils/btnPermission.js"
 
   const roleQuery = ref({
     name:'',
@@ -215,7 +216,7 @@
     </template>
     <div class="toolbar">
       <el-button type="primary" :icon="Plus" @click="showAddDialog">添加</el-button>
-      <el-button type="danger" :icon="Delete" @click="deleteAll">批量删除</el-button>
+      <el-button type="danger" :icon="Delete" @click="deleteAll" :disabled="!hasBtnPermission('role:delete')">批量删除</el-button>
     </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
@@ -226,9 +227,9 @@
       <el-table-column prop="createTime" label="创建时间" width="200"/>
       <el-table-column align="center" width="250" fixed="right" label="操作">
         <template #default="{ row }">
-          <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
-          <el-button size="small" type="success" @click="showAssignedPermissionDialog(row)">权限</el-button>
+          <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" :disabled="!hasBtnPermission('role:update')">编辑</el-button>
+          <el-button size="small" type="danger" @click="deleteById(row.id)" :disabled="!hasBtnPermission('role:delete')">删除</el-button>
+          <el-button size="small" type="success" @click="showAssignedPermissionDialog(row)" :disabled="!hasBtnPermission('role:setPermission')">权限</el-button>
         </template>
       </el-table-column>
     </el-table>

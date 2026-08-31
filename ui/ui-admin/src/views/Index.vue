@@ -62,7 +62,9 @@
   // 获取用户信息
   const getUserInfo = () => {
     userApi.userInfo().then(result => {
-      userInfoStore.setUserInfo(result.data)
+      userInfoStore.setUserInfo(result.data.user)
+      menuData.value = result.data.routerList
+      userInfoStore.setBtn(result.data.btnList)
     })
   }
   getUserInfo()
@@ -140,6 +142,28 @@
       }
     })
   }
+
+  // 菜单  用户管理， 分类管理， 商品管理
+  const menuData = ref([
+    {
+      name: '业务管理', icon: 'Notebook', children: [
+      {name: '老人管理', icon: 'UserFilled', path: "/elder"},
+      {name: '标签管理', icon: 'CollectionTag', path: "/tag"},
+    ]
+    },
+    {
+      name: '系统管理', icon: 'Setting', children: [
+        {name: '用户管理', icon: 'User', path: "/user"},
+        {name: '角色管理', icon: 'Key', path: "/role"},
+        {name: '权限管理', icon: 'Lock', path: "/permission"},
+      ]
+    },
+      {
+        name: '个人中心', icon: 'Postcard', children: [
+          {name: '个人资料', icon: 'Document', path: "/user/info"},
+        ]
+      },
+  ]);
 </script>
 
 <template>
@@ -150,9 +174,32 @@
       <div class="el-aside__logo"></div>
       <!-- element-plus的菜单标签 -->
       <!-- default-active 绑定当前路由,让菜单自动高亮当前页面 -->
-      <el-menu active-text-color="#ffd04b" background-color="#232323" text-color="#fff"
+      <el-menu active-text-color="#ffd04b" background-color="#232323" text-color="#fff" router>
+        <!-- 动态生成菜单 -->
+        <template v-for="(menu, index) in menuData" :index="index.toString()">
+          <el-sub-menu v-if="menu.children?.length>0" :index="menu.name">
+            <template #title>
+              <component
+                  class="icons"
+                  :is="menu.icon"
+                  style="width: 1em; height: 1em; margin-right: 8px" >
+              </component>
+              <span>{{ menu.name }}</span>
+            </template>
+            <el-menu-item v-for="(child, ind) in menu.children" :index="child.path">
+              <el-icon><component :is="child.icon"></component></el-icon>
+              <span>{{ child.name }}</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item v-else :index="menu.path">
+            <el-icon><component :is="menu.icon"></component></el-icon>
+            <span>{{ menu.name }}</span>
+          </el-menu-item>
+        </template>
+      </el-menu>
+<!--      <el-menu active-text-color="#ffd04b" background-color="#232323" text-color="#fff"
                :default-active="route.path" router>
-        <!-- 业务管理 -->
+        &lt;!&ndash; 业务管理 &ndash;&gt;
         <el-sub-menu index="business">
           <template #title>
             <el-icon>
@@ -173,7 +220,7 @@
             <span>标签管理</span>
           </el-menu-item>
         </el-sub-menu>
-        <!-- 系统管理 -->
+        &lt;!&ndash; 系统管理 &ndash;&gt;
         <el-sub-menu index="system">
           <template #title>
             <el-icon>
@@ -200,7 +247,7 @@
             <span>权限管理</span>
           </el-menu-item>
         </el-sub-menu>
-        <!-- 个人中心 -->
+        &lt;!&ndash; 个人中心 &ndash;&gt;
         <el-sub-menu index="personal">
           <template #title>
             <el-icon>
@@ -215,7 +262,7 @@
             <span>个人资料</span>
           </el-menu-item>
         </el-sub-menu>
-      </el-menu>
+      </el-menu>-->
     </el-aside>
     <!-- 右侧主区域 -->
     <el-container>

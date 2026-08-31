@@ -7,6 +7,7 @@ import com.situ.elder.pojo.dto.UserPasswordDTO;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.pojo.query.UserQuery;
 import com.situ.elder.pojo.vo.UserRoleVO;
+import com.situ.elder.service.IPermissionService;
 import com.situ.elder.service.IUserService;
 import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
@@ -33,6 +34,8 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
+    @Autowired
+    private IPermissionService permissionService;
 
     @PostMapping("/login")
     public Result<String> login(@RequestBody User user){
@@ -80,11 +83,19 @@ public class UserController {
     @GetMapping("/userInfo")
     public Result<User> userInfo(@RequestHeader("Authorization") String token){
         Map<String, Object> map = JwtUtil.parseToken(token);
-//        String username = (String) map.get("name");
         Integer id = (Integer) map.get("id");
         User user = userService.getById(id);
         user.setPassword(null);
-        return Result.ok(user);
+        // 获取用户权限
+        Map<String, Object> permissionMap = permissionService.selectPermissionByUserId(user.getId());
+        // 将用户信息和权限信息封装到结果集中
+        Map<String,Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        // 菜单和目录权限
+        resultMap.put("routerList", permissionMap.get("routerList"));
+        // 按钮权限
+        resultMap.put("btnList", permissionMap.get("btnList"));
+        return Result.ok(resultMap);
     }
     /**
      * 根据ID查询用户

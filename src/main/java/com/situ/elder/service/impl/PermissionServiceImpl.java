@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -32,48 +34,6 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
     // 注入权限表的 Mapper，用于直接执行数据库查询（selectList、selectPage 等）
     @Autowired
     private PermissionMapper permissionMapper;
-
-    /*
-     * 已废弃的分页查询方法（被新方案替代，仅作参考保留）：
-     * 根据查询对象中的条件（父ID、权限名、权限值、创建时间区间）进行模糊/范围查询，
-     * 其中 between(...) 的第三个参数是可选条件——只有当 begin 和 end 都非空时才生效。
-     */
-    /*@Override
-    public IPage<Permission> list(PermissionQuery permissionQuery) {
-        IPage<Permission> page = new Page<>(permissionQuery.getPage(), permissionQuery.getLimit());
-
-        LambdaQueryWrapper<Permission> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.like(!ObjectUtils.isEmpty(permissionQuery.getParentId()), Permission::getParentId, permissionQuery.getParentId())
-                        .like(!ObjectUtils.isEmpty(permissionQuery.getName()), Permission::getName, permissionQuery.getName())
-                        .like(!ObjectUtils.isEmpty(permissionQuery.getPermissionValue()), Permission::getPermissionValue, permissionQuery.getPermissionValue())
-                        .between(!ObjectUtils.isEmpty(permissionQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(permissionQuery.getEndCreateTime()), Permission::getCreateTime, permissionQuery.getBeginCreateTime(), permissionQuery.getEndCreateTime());
-
-        return permissionMapper.selectPage(page, lambdaQueryWrapper);
-    }*/
-
-    /**
-     * 获取所有"被作为父节点使用"的 parentId 集合。
-     *
-     * 功能：查出全表权限后，收集每条记录的 parentId 并去重，
-     * 返回给前端后可用于判断"哪些权限节点下面挂有子节点"
-     * （例如前端据此决定是否显示展开箭头、是否允许删除该节点）。
-     *
-     * 运作流程：
-     * 1. selectList(null)：无条件查询权限表所有记录；
-     * 2. stream().map(getParentId)：把每条记录映射成它的 parentId；
-     * 3. distinct().toList()：去重后收集为 List；
-     * 4. 封装进 PermissionVO 的 parentIds 字段返回。
-     */
-    /*@Override
-    public PermissionVO getPermissionVO() {
-        // 查出所有权限记录
-        List<Permission> permissions = permissionMapper.selectList(null);
-        PermissionVO permissionVO = new PermissionVO();
-        // 取出每条记录的parentId，去重后收集为List
-        List<Long> paretIdlist = permissions.stream().map(Permission::getParentId).distinct().toList();
-        permissionVO.setParentIds(paretIdlist);
-        return permissionVO;
-    }*/
 
     /**
      * 查询所有权限并组装成树形结构（用于前端渲染菜单/权限树）。
@@ -102,15 +62,76 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
                 }).toList();
 
         // 构建一级父节点集合：parentId == 0 即为根节点
-        List<PermissionVO> permissionVOTree = permissionVOList.stream()
+        List<PermissionVO> permissionVOTree = buildTree(permissionVOList);
+
+        return permissionVOTree;
+    }
+
+    /**
+     * 将"扁平的权限 VO 列表"组装成树形结构（构建一级/根节点层级）。
+     *
+     * 约定：parentId == 0 表示该节点是一级（根）节点，没有更上层的父节点。
+     *
+     * 实现逻辑：
+     * 1. filter 筛出所有 parentId == 0 的根节点，它们就是树的第一层；
+     * 2. 对每个根节点调用 buildChildTree 递归填充 children 字段，
+     *    由后者在同一份扁平列表里逐层向下找出子孙节点；
+     * 3. 收集为 List 返回，即"根节点列表，每个根节点内嵌整棵子树"。
+     *
+     * 该方法同时被两处复用：
+     * - selectPermissionTree：全量权限树（角色分配权限时的树形展示）；
+     * - selectPermissionByUserId：某用户被授权的权限树（登录后动态生成菜单）。
+     *
+     * @param permissionVOList 扁平的权限 VO 列表（不要求排序，但排序后同级展示顺序更稳定）
+     * @return 树形结构的根节点列表
+     */
+    public List<PermissionVO> buildTree(List<PermissionVO> permissionVOList) {
+        return permissionVOList.stream()
                 .filter(permissionVO -> permissionVO.getParentId() == 0)
                 .map(permissionVO -> {
                     // 递归构建该根节点的children（下级节点列表）
                     permissionVO.setChildren(buildChildTree(permissionVO, permissionVOList));
                     return permissionVO;
                 }).toList();
+    }
 
-        return permissionVOTree;
+    /**
+     * 根据用户 ID 查询其拥有的权限，并拆成"路由（菜单）+ 按钮"两部分返回。
+     *
+     * 背景：permission 表用 type 字段区分权限类型——
+     * type == 0/1 表示菜单/路由权限（对应前端页面），
+     * type == 2 表示按钮级权限（对应页面内的操作，如"删除用户"按钮）。
+     *
+     * 实现逻辑：
+     * 1. 调用 Mapper 的 selectPermissionByUserId，通过 user -> user_role -> role -> role_permission
+     *    多表联查（中间经 GROUP_CONCAT 聚合角色）拿到该用户被授权的全量权限；
+     * 2. 遍历权限列表按 type 分流：
+     *    - 按钮权限：只收集其权限标识 permissionValue（如 "user:delete"），
+     *      前端拿到后用自定义指令控制按钮显隐；
+     *    - 菜单权限：拷贝为 PermissionVO；
+     * 3. 菜单 VO 列表再经 buildTree 组装成树形（登录后动态生成侧边栏菜单）；
+     * 4. 用 Map.of 打包成 { routerList: 菜单树, btnList: 按钮权限标识列表 } 一次性返回。
+     *
+     * @param id 用户 ID
+     * @return routerList 为该用户的菜单权限树，btnList 为其按钮权限标识集合
+     */
+    @Override
+    public Map<String, Object> selectPermissionByUserId(Long id) {
+        // 根据用户ID查询权限
+        List<Permission> permissionList = permissionMapper.selectPermissionByUserId(id);
+        List<String> btnList = new ArrayList<>();
+        List<PermissionVO> permissionVOList = new ArrayList<>();
+        permissionList.forEach(permission -> {
+            if (permission.getType() == 2) {
+                // 如果是按钮权限，添加到按钮列表
+                btnList.add(permission.getPermissionValue());
+            }else{
+                PermissionVO permissionVO = new PermissionVO();
+                BeanUtils.copyProperties(permission, permissionVO);
+                permissionVOList.add(permissionVO);
+            }
+        });
+        return Map.of("routerList", buildTree(permissionVOList), "btnList", btnList);
     }
 
     /**

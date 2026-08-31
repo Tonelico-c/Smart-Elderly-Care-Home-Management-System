@@ -14,6 +14,7 @@
   import {useTokenStore} from '@/store/token.js'
   const tokenStore = useTokenStore();
   import defaultAvatar from '@/assets/default.png'
+  import hasBtnPermission from "@/utils/btnPermission.js"
   //表格数据
   const list = ref([])
   const total = ref(0)
@@ -269,8 +270,8 @@
       </el-form>
     </template>
     <div class="toolbar">
-      <el-button type="primary" :icon="Plus" @click="showAddDialog">添加</el-button>
-      <el-button type="danger" :icon="Delete" @click="deleteAll">批量删除</el-button>
+      <el-button type="primary" :icon="Plus" @click="showAddDialog" :disabled="!hasBtnPermission('user:add')">添加</el-button>
+      <el-button type="danger" :icon="Delete" @click="deleteAll" :disabled="!hasBtnPermission('user:delete')">批量删除</el-button>
       <el-upload
           multiple=""
           method="post"
@@ -312,9 +313,9 @@
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="200px" fixed="right" label="操作">
         <template #default="{ row }">
-          <el-button size="small" type="primary" @click="showUpdateDialog(row.id)">编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteById(row.id)">删除</el-button>
-          <el-button size="small" type="success" @click="showRoleDialog(row)">角色</el-button>
+          <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" :disabled="!hasBtnPermission('user:update')">编辑</el-button>
+          <el-button size="small" type="danger" @click="deleteById(row.id)" :disabled="!hasBtnPermission('user:delete')">删除</el-button>
+          <el-button size="small" type="success" @click="showRoleDialog(row)" :disabled="!hasBtnPermission('user:setRole')">角色</el-button>
         </template>
       </el-table-column>
     </el-table>
