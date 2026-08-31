@@ -9,6 +9,7 @@ import User from '@/views/User.vue'
 import Elder from '@/views/Elder.vue'
 import UserInfo from "@/views/UserInfo.vue";
 import Tag from "@/views/Tag.vue";
+import CareItem from "@/views/CareItem.vue";
 import Role from "@/views/Role.vue";
 import Permission from "@/views/Permission.vue";
 
@@ -28,6 +29,7 @@ const router = createRouter({
                 {path: '/elder', component: Elder},
                 {path: '/user/info', component: UserInfo},
                 {path: '/tag', component: Tag},
+                {path: '/care-item', component: CareItem},
                 {path: '/role', component: Role},
                 {path:'/permission', component: Permission}
             ]
