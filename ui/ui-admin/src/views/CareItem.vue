@@ -213,14 +213,9 @@
       <el-table-column prop="sort" label="排序" width="80"/>
       <el-table-column prop="status" label="状态" width="120">
         <template #default="{ row }">
-          <el-select v-model="row.status" @change="handleStatusChange(row)">
-            <el-option
-                v-for="item in statusOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-            />
-          </el-select>
+          <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+            {{ row.status === 1 ? '正常' : '禁用' }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="200px"/>

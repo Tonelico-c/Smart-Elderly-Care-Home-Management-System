@@ -99,12 +99,12 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
      * 根据用户 ID 查询其拥有的权限，并拆成"路由（菜单）+ 按钮"两部分返回。
      *
      * 背景：permission 表用 type 字段区分权限类型——
-     * type == 0/1 表示菜单/路由权限（对应前端页面），
+     * type == 0/1 表示目录/菜单权限（对应前端页面），
      * type == 2 表示按钮级权限（对应页面内的操作，如"删除用户"按钮）。
      *
      * 实现逻辑：
      * 1. 调用 Mapper 的 selectPermissionByUserId，通过 user -> user_role -> role -> role_permission
-     *    多表联查（中间经 GROUP_CONCAT 聚合角色）拿到该用户被授权的全量权限；
+     *    多表联查拿到该用户被授权的全量权限；
      * 2. 遍历权限列表按 type 分流：
      *    - 按钮权限：只收集其权限标识 permissionValue（如 "user:delete"），
      *      前端拿到后用自定义指令控制按钮显隐；
