@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.situ.elder.mapper.BedMapper">
+    <resultMap id="BedVOMap" type="com.situ.elder.pojo.vo.BedVO">
+        <id column="id" property="id" />
+        <result column="room_id" property="roomId" />
+        <result column="bed_no" property="bedNo" />
+        <result column="status" property="status" />
+        <result column="price" property="price" />
+        <result column="elder_name" property="elderName" />
+        <result column="check_in_time" property="checkInTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
 
+    <!--按房间查询床位：LEFT JOIN 入住中(1)的入住记录，带出入住老人姓名和入住时间-->
+    <select id="listByRoom" resultMap="BedVOMap">
+        SELECT be.*, e.name AS elder_name, cir.check_in_time AS check_in_time
+        FROM bed AS be
+        LEFT JOIN check_in_record AS cir
+        ON be.id = cir.bed_id AND cir.status = 1
+        LEFT JOIN elder AS e
+        ON cir.elder_id = e.id
+        WHERE be.room_id = #{roomId}
+        ORDER BY be.bed_no
+    </select>
 </mapper>
