@@ -1,7 +1,7 @@
 // 创建一个路由器，并暴露出去
 // 第一步：引入createRouter
-import {createRouter, createWebHistory} from 'vue-router'
-import {useTokenStore} from '@/store/token.js'
+import { createRouter, createWebHistory } from 'vue-router'
+import { useTokenStore } from '@/store/token.js'
 // 引入一个一个可能要呈现组件
 import Index from '@/views/Index.vue'
 import Login from '@/views/Login.vue'
@@ -12,6 +12,7 @@ import Tag from "@/views/Tag.vue";
 import CareItem from "@/views/CareItem.vue";
 import CareLevel from "@/views/CareLevel.vue";
 import CarePlan from "@/views/CarePlan.vue";
+import CareTask from "@/views/CareTask.vue";
 import Role from "@/views/Role.vue";
 import Permission from "@/views/Permission.vue";
 
@@ -27,15 +28,16 @@ const router = createRouter({
         },
         {
             path: '/', component: Index, children: [
-                {path: '/user', component: User},
-                {path: '/elder', component: Elder},
-                {path: '/user/info', component: UserInfo},
-                {path: '/tag', component: Tag},
-                {path: '/care-item', component: CareItem},
-                {path: '/care-level', component: CareLevel},
-                {path: '/care-plan', component: CarePlan},
-                {path: '/role', component: Role},
-                {path:'/permission', component: Permission}
+                { path: '/user', component: User },
+                { path: '/elder', component: Elder },
+                { path: '/user/info', component: UserInfo },
+                { path: '/tag', component: Tag },
+                { path: '/care-item', component: CareItem },
+                { path: '/care-level', component: CareLevel },
+                { path: '/care-plan', component: CarePlan },
+                { path: '/care-task', component: CareTask },
+                { path: '/role', component: Role },
+                { path: '/permission', component: Permission }
             ]
         }
     ]
