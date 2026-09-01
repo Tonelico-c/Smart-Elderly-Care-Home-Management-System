@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.situ.elder.mapper.BuildingMapper">
+    <resultMap id="BuildingVOMap" type="com.situ.elder.pojo.vo.BuildingVO">
+        <id column="id" property="id" />
+        <result column="building_no" property="buildingNo" />
+        <result column="building_name" property="buildingName" />
+        <result column="floor_count" property="floorCount" />
+        <result column="status" property="status" />
+        <result column="description" property="description" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="room_count" property="roomCount" />
+        <result column="bed_count" property="bedCount" />
+        <result column="resident_count" property="residentCount" />
+    </resultMap>
+
+    <select id="list" resultMap="BuildingVOMap">
+        SELECT bu.*, COUNT(r.id) AS room_count, COUNT(be.id) AS bed_count, COUNT(cir.id) AS resident_count
+        FROM building AS bu LEFT JOIN room AS r
+        ON bu.id = r.building_id
+        LEFT JOIN bed AS be
+        ON r.id = be.room_id
+        LEFT JOIN check_in_record AS cir
+        ON be.id = cir.bed_id
+        <where>
+            <if test="buildingQuery.buildingName != null and buildingQuery.buildingName != ''">
+                AND bu.building_name LIKE CONCAT('%', #{buildingQuery.buildingName}, '%')
+            </if>
+            <if test="buildingQuery.status != null">
+                AND bu.status = #{buildingQuery.status}
+            </if>
+        </where>
+        GROUP BY bu.id
+    </select>
+
+    <!--顶部统计：房间总数、床位总数、入住总人数、空闲床位数量-->
+    <select id="stats" resultType="com.situ.elder.pojo.vo.BuildingVO">
+        SELECT COUNT(r.id) AS room_count, COUNT(be.id) AS bed_count,
+               COUNT(cir.id) AS resident_count,
+               COUNT(be.id) - COUNT(cir.id) AS free_bed_count
+        FROM room AS r
+        LEFT JOIN bed AS be ON r.id = be.room_id
+        LEFT JOIN check_in_record AS cir ON be.id = cir.bed_id
+    </select>
+</mapper>

@@ -33,15 +33,16 @@
 
   // 下拉框数据：老人、护理人员、护理等级
   const elderList = ref([])
-  const userList = ref([])
+  const nurseList = ref([])
   const careLevelList = ref([])
   const careItemList = ref([])
   const loadOptions = () => {
     elderApi.list({page: 1, limit: 1000}).then(result => {
       elderList.value = result.data.records
     })
-    userApi.list({page: 1, limit: 1000}).then(result => {
-      userList.value = result.data.records
+    // 只查角色为护理人员（NURSE）的用户
+    userApi.list({page: 1, limit: 1000, roleCode: 'NURSE'}).then(result => {
+      nurseList.value = result.data.records
     })
     careLevelApi.list({page: 1, limit: 1000}).then(result => {
       careLevelList.value = result.data.records
@@ -53,7 +54,7 @@
   loadOptions()
 
   const elderName = (elderId) => elderList.value.find(elder => elder.id === elderId)?.name
-  const userName = (userId) => userList.value.find(user => user.id === userId)?.name
+  const nurseName = (userId) => nurseList.value.find(user => user.id === userId)?.name
   const careLevelName = (careLevelId) => careLevelList.value.find(careLevel => careLevel.id === careLevelId)?.name
 
   const onSearch = () => {
@@ -237,7 +238,7 @@
         <template #default="{ row }">{{ elderName(row.elderId) }}</template>
       </el-table-column>
       <el-table-column label="护理人员" width="100">
-        <template #default="{ row }">{{ userName(row.userId) }}</template>
+        <template #default="{ row }">{{ nurseName(row.userId) }}</template>
       </el-table-column>
       <el-table-column label="护理等级" width="100">
         <template #default="{ row }">{{ careLevelName(row.careLevelId) }}</template>
@@ -290,7 +291,7 @@
       <el-form-item label="护理人员" :label-width="80">
         <el-select v-model="carePlan.userId" filterable placeholder="请选择护理人员">
           <el-option
-              v-for="item in userList"
+              v-for="item in nurseList"
               :key="item.id"
               :label="item.name"
               :value="item.id"

@@ -5,13 +5,9 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class UserQuery {
-    private String name;
-    private String email;
-    /**
-     * 角色编码（如 NURSE 护理人员），用于筛选指定角色的用户
-     */
-    private String roleCode;
+public class BuildingQuery {
+    private String buildingName;
+    private Integer status;
     private Date beginCreateTime;
     private Date endCreateTime;
     private Integer page;

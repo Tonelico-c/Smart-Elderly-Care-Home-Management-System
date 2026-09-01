@@ -75,6 +75,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .like(!ObjectUtils.isEmpty(userQuery.getEmail()), User::getEmail, userQuery.getEmail())
                 .between(!ObjectUtils.isEmpty(userQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(userQuery.getEndCreateTime()), User::getCreateTime, userQuery.getBeginCreateTime(), userQuery.getEndCreateTime())
                 .orderByDesc(User::getCreateTime);
+        // 按角色编码过滤（如 NURSE 护理人员）：先查该角色下的用户ID，再限定用户范围
+        if (!ObjectUtils.isEmpty(userQuery.getRoleCode())) {
+            Role role = roleMapper.selectOne(new QueryWrapper<Role>().eq("code", userQuery.getRoleCode()));
+            if (role == null) {
+                return page;
+            }
+            List<Long> userIds = userRoleMapper.selectList(new QueryWrapper<UserRole>().eq("role_id", role.getId()))
+                    .stream().map(UserRole::getUserId).toList();
+            if (userIds.isEmpty()) {
+                return page;
+            }
+            wrapper.in(User::getId, userIds);
+        }
         return userMapper.selectPage(page, wrapper);
     }
 
