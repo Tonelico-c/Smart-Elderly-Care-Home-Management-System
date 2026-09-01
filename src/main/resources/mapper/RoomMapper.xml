@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.situ.elder.mapper.RoomMapper">
+    <resultMap id="RoomVOMap" type="com.situ.elder.pojo.vo.RoomVO">
+        <id column="id" property="id" />
+        <result column="building_id" property="buildingId" />
+        <result column="building_name" property="buildingName" />
+        <result column="room_no" property="roomNo" />
+        <result column="floor" property="floor" />
+        <result column="room_type" property="roomType" />
+        <result column="bed_count" property="bedCount" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="resident_count" property="residentCount" />
+    </resultMap>
 
+    <select id="list" resultMap="RoomVOMap">
+        SELECT r.*, bu.building_name AS building_name,
+        COUNT(cir.id) AS resident_count
+        FROM room AS r LEFT JOIN building AS bu
+        ON r.building_id = bu.id
+        LEFT JOIN bed AS be
+        ON r.id = be.room_id
+        LEFT JOIN check_in_record AS cir
+        ON be.id = cir.bed_id
+        <where>
+            <if test="roomQuery.roomNo != null and roomQuery.roomNo != ''">
+                AND r.room_no LIKE CONCAT('%', #{roomQuery.roomNo}, '%')
+            </if>
+            <if test="roomQuery.buildingId != null">
+                AND r.building_id = #{roomQuery.buildingId}
+            </if>
+            <if test="roomQuery.roomType != null">
+                AND r.room_type = #{roomQuery.roomType}
+            </if>
+            <if test="roomQuery.status != null">
+                AND r.status = #{roomQuery.status}
+            </if>
+        </where>
+        GROUP BY r.id
+    </select>
 </mapper>

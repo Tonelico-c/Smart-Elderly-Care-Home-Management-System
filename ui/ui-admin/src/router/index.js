@@ -16,6 +16,7 @@ import CareTask from "@/views/CareTask.vue";
 import Building from "@/views/Building.vue";
 import Role from "@/views/Role.vue";
 import Permission from "@/views/Permission.vue";
+import Room from "@/views/Room.vue";
 
 
 
@@ -38,6 +39,7 @@ const router = createRouter({
                 { path: '/care-plan', component: CarePlan },
                 { path: '/care-task', component: CareTask },
                 { path: '/building', component: Building },
+                { path: '/room', component: Room },
                 { path: '/role', component: Role },
                 { path: '/permission', component: Permission }
             ]
