@@ -1,4 +1,4 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 import com.situ.elder.utils.AliOSSUtil;
 import com.situ.elder.utils.Result;

@@ -1,4 +1,4 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
 import com.situ.elder.pojo.entity.Bed;
@@ -20,7 +20,7 @@ import java.util.List;
  * @since 2026-09-01
  */
 @RestController
-@RequestMapping("/beds")
+@RequestMapping("/admin/beds")
 public class BedController {
 
     @Autowired

@@ -1,12 +1,9 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Role;
-import com.situ.elder.pojo.query.PageQuery;
 import com.situ.elder.pojo.query.RoleQuery;
-import com.situ.elder.pojo.vo.PermissionVO;
-import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IRoleService;
 import com.situ.elder.service.impl.UserServiceImpl;
 import com.situ.elder.utils.Result;
@@ -25,7 +22,7 @@ import java.util.Map;
  * @since 2026-08-27
  */
 @RestController
-@RequestMapping("/roles")
+@RequestMapping("/admin/roles")
 public class RoleController {
 
     @Autowired

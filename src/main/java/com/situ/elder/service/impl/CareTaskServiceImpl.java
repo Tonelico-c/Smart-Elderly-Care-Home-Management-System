@@ -32,6 +32,7 @@ public class CareTaskServiceImpl extends ServiceImpl<CareTaskMapper, CareTask> i
         LambdaQueryWrapper<CareTask> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(!ObjectUtils.isEmpty(careTaskQuery.getElderId()), CareTask::getElderId, careTaskQuery.getElderId())
                 .eq(!ObjectUtils.isEmpty(careTaskQuery.getStatus()), CareTask::getStatus, careTaskQuery.getStatus())
+                .eq(!ObjectUtils.isEmpty(careTaskQuery.getUserId()), CareTask::getUserId, careTaskQuery.getUserId())
                 .between(!ObjectUtils.isEmpty(careTaskQuery.getBeginPlanExecuteDate()) && !ObjectUtils.isEmpty(careTaskQuery.getEndPlanExecuteDate()), CareTask::getPlanExecuteDate, careTaskQuery.getBeginPlanExecuteDate(), careTaskQuery.getEndPlanExecuteDate())
                 .orderByDesc(CareTask::getCreateTime);
         return careTaskMapper.selectPage(page, lambdaQueryWrapper);

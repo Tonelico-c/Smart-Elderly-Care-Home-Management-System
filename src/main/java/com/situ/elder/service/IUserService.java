@@ -31,4 +31,6 @@ public interface IUserService extends IService<User> {
     UserRoleVO selectAssignedRole(Long userId);
 
     void assignRole(Long userId, Long[] roleIds);
+
+    boolean hasRoleCode(Long userId, String roleCode);
 }

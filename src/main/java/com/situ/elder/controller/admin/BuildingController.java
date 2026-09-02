@@ -1,4 +1,4 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -22,7 +22,7 @@ import java.util.Map;
  * @since 2026-09-01
  */
 @RestController
-@RequestMapping("/buildings")
+@RequestMapping("/admin/buildings")
 public class BuildingController {
 
     @Autowired

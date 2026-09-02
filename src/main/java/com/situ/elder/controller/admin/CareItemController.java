@@ -1,4 +1,4 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -20,7 +20,7 @@ import java.util.Arrays;
  * @since 2026-08-31
  */
 @RestController
-@RequestMapping("/care-items")
+@RequestMapping("/admin/care-items")
 public class CareItemController {
 
     @Autowired

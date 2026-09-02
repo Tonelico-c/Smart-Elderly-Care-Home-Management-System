@@ -11,4 +11,5 @@ public class CareTaskQuery {
     private Date endPlanExecuteDate;
     private Integer page;
     private Integer limit;
+    private Long userId;
 }

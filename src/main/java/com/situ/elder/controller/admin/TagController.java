@@ -1,17 +1,15 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Tag;
 import com.situ.elder.pojo.query.TagQuery;
-import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.ITagService;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
-import java.util.List;
 
 
 /**
@@ -23,7 +21,7 @@ import java.util.List;
  * @since 2026-08-26
  */
 @RestController
-@RequestMapping("/tags")
+@RequestMapping("/admin/tags")
 public class TagController {
 
     @Autowired

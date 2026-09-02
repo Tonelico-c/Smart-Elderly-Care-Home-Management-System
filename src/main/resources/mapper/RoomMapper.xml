@@ -15,29 +15,40 @@
         <result column="resident_count" property="residentCount" />
     </resultMap>
 
+    <!--status 为动态计算值：维修(3)保持手动设置不变，其余按入住人数计算；外层子查询过滤，避免 HAVING 非聚合条件-->
     <select id="list" resultMap="RoomVOMap">
-        SELECT r.*, bu.building_name AS building_name,
-        COUNT(cir.id) AS resident_count
-        FROM room AS r LEFT JOIN building AS bu
-        ON r.building_id = bu.id
-        LEFT JOIN bed AS be
-        ON r.id = be.room_id
-        LEFT JOIN check_in_record AS cir
-        ON be.id = cir.bed_id
+        SELECT * FROM (
+            SELECT r.id, r.building_id, r.room_no, r.floor, r.room_type, r.bed_count,
+                   r.create_time, r.update_time,
+                   bu.building_name AS building_name,
+                   COUNT(cir.id) AS resident_count,
+                   CASE
+                       WHEN r.status = 3 THEN 3
+                       WHEN COUNT(cir.id) = 0 THEN 0
+                       WHEN COUNT(cir.id) &gt;= IFNULL(r.bed_count, 0) THEN 2
+                       ELSE 1
+                   END AS status
+            FROM room AS r LEFT JOIN building AS bu
+            ON r.building_id = bu.id
+            LEFT JOIN bed AS be
+            ON r.id = be.room_id
+            LEFT JOIN check_in_record AS cir
+            ON be.id = cir.bed_id AND cir.status = 1
+            GROUP BY r.id
+        ) AS t
         <where>
             <if test="roomQuery.roomNo != null and roomQuery.roomNo != ''">
-                AND r.room_no LIKE CONCAT('%', #{roomQuery.roomNo}, '%')
+                AND t.room_no LIKE CONCAT('%', #{roomQuery.roomNo}, '%')
             </if>
             <if test="roomQuery.buildingId != null">
-                AND r.building_id = #{roomQuery.buildingId}
+                AND t.building_id = #{roomQuery.buildingId}
             </if>
             <if test="roomQuery.roomType != null">
-                AND r.room_type = #{roomQuery.roomType}
+                AND t.room_type = #{roomQuery.roomType}
             </if>
             <if test="roomQuery.status != null">
-                AND r.status = #{roomQuery.status}
+                AND t.status = #{roomQuery.status}
             </if>
         </where>
-        GROUP BY r.id
     </select>
 </mapper>

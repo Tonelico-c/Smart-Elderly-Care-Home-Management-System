@@ -294,14 +294,16 @@
         />
       </el-form-item>
       <el-form-item label="房间状态" :label-width="80">
-        <el-select v-model="room.status">
+        <el-select v-model="room.status" placeholder="请选择房间状态">
           <el-option
               v-for="item in statusOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
+              :disabled="item.value !== 3 && room.id"
           />
         </el-select>
+        <div class="status-tip">空闲/部分入住/已满 按入住人数自动计算，仅"维修"可手动设置</div>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -338,5 +340,11 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.status-tip {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  line-height: 1.4;
 }
 </style>

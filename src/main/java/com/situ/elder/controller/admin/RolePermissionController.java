@@ -1,4 +1,4 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2026-08-28
  */
 @RestController
-@RequestMapping("/role-permission")
+@RequestMapping("/admin/role-permission")
 public class RolePermissionController {
 
 }

@@ -1,6 +1,7 @@
 package com.situ.elder.service.impl;
 
 import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -202,5 +203,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             userRole.setRoleId(roleId);
             userRoleMapper.insert(userRole);
         }
+    }
+
+    @Override
+    public boolean hasRoleCode(Long userId, String roleCode) {
+        Role role = roleMapper.selectOne(new LambdaQueryWrapper<Role>().eq(Role::getCode, roleCode));
+        if(role == null){
+            return false;
+        }
+        Long count = userRoleMapper.selectCount(new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId).eq(UserRole::getRoleId, role.getId()));
+        return count > 0;
     }
 }

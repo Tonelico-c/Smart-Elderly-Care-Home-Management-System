@@ -1,9 +1,7 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.Permission;
-import com.situ.elder.pojo.query.PermissionQuery;
 import com.situ.elder.pojo.vo.PermissionVO;
 import com.situ.elder.service.IPermissionService;
 import com.situ.elder.utils.Result;
@@ -22,7 +20,7 @@ import java.util.List;
  * @since 2026-08-27
  */
 @RestController
-@RequestMapping("/permissions")
+@RequestMapping("/admin/permissions")
 public class PermissionController {
     @Autowired
     private IPermissionService permissionService;

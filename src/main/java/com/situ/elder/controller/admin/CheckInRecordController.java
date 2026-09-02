@@ -1,8 +1,7 @@
-package com.situ.elder.controller;
+package com.situ.elder.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.CheckInRecord;
-import com.situ.elder.pojo.entity.Elder;
 import com.situ.elder.pojo.query.CheckInRecordQuery;
 import com.situ.elder.pojo.vo.BedVO;
 import com.situ.elder.pojo.vo.CheckInRecordVO;
@@ -23,7 +22,7 @@ import java.util.List;
  * @since 2026-09-01
  */
 @RestController
-@RequestMapping("/checkin-records")
+@RequestMapping("/admin/checkin-records")
 public class CheckInRecordController {
 
     @Autowired
