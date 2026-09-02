@@ -1,14 +1,12 @@
 package com.situ.elder.controller.app;
 
+import com.situ.elder.pojo.dto.AppAppointmentDTO;
 import com.situ.elder.pojo.vo.ExamAppointmentVO;
 import com.situ.elder.service.IExamAppointmentService;
 import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +27,31 @@ public class AppAppointmentController {
         return Result.ok(examAppointmentService.listByElderId(elderId));
     }
 
+    /**
+     * 提交体检预约
+     * POST /app/appointment
+     */
+    @PostMapping
+    public Result add(@RequestHeader("Authorization") String token,
+                      @RequestBody AppAppointmentDTO appAppointmentDTO) {
+        Long elderId = getElderIdFromToken(token);
+        examAppointmentService.add(appAppointmentDTO, elderId);
+        return Result.ok("预约成功");
+    }
+
+    /**
+     * 取消预约
+     * PUT /app/appointment/1/cancel
+     */
+    @PutMapping("/{id}/cancel")
+    public Result cancel(@RequestHeader("Authorization") String token, @PathVariable Long id) {
+        Long elderId = getElderIdFromToken(token);
+        examAppointmentService.cancel(id, elderId);
+        return Result.ok("取消成功");
+    }
+    /**
+     * 从token中获取老人ID
+     */
     private Long getElderIdFromToken(String token) {
         // TODO: 从token中获取老人ID
         Map<String, Object> map = JwtUtil.parseToken(token);
