@@ -16,13 +16,14 @@
     </resultMap>
 
     <select id="list" resultMap="BuildingVOMap">
-        SELECT bu.*, COUNT(r.id) AS room_count, COUNT(be.id) AS bed_count, COUNT(cir.id) AS resident_count
+        SELECT bu.*, COUNT(DISTINCT r.id) AS room_count, COUNT(DISTINCT be.id) AS bed_count,
+               COUNT(DISTINCT cir.id) AS resident_count
         FROM building AS bu LEFT JOIN room AS r
         ON bu.id = r.building_id
         LEFT JOIN bed AS be
         ON r.id = be.room_id
         LEFT JOIN check_in_record AS cir
-        ON be.id = cir.bed_id
+        ON be.id = cir.bed_id AND cir.status = 1
         <where>
             <if test="buildingQuery.buildingName != null and buildingQuery.buildingName != ''">
                 AND bu.building_name LIKE CONCAT('%', #{buildingQuery.buildingName}, '%')
@@ -36,11 +37,11 @@
 
     <!--顶部统计：房间总数、床位总数、入住总人数、空闲床位数量-->
     <select id="stats" resultType="com.situ.elder.pojo.vo.BuildingVO">
-        SELECT COUNT(r.id) AS room_count, COUNT(be.id) AS bed_count,
-               COUNT(cir.id) AS resident_count,
-               COUNT(be.id) - COUNT(cir.id) AS free_bed_count
+        SELECT COUNT(DISTINCT r.id) AS room_count, COUNT(DISTINCT be.id) AS bed_count,
+               COUNT(DISTINCT cir.id) AS resident_count,
+               COUNT(DISTINCT be.id) - COUNT(DISTINCT cir.id) AS free_bed_count
         FROM room AS r
         LEFT JOIN bed AS be ON r.id = be.room_id
-        LEFT JOIN check_in_record AS cir ON be.id = cir.bed_id
+        LEFT JOIN check_in_record AS cir ON be.id = cir.bed_id AND cir.status = 1
     </select>
 </mapper>

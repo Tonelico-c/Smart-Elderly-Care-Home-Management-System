@@ -1,35 +1,101 @@
-@import './base.css';
+/* 智慧养老社区管理系统 - 全局主题样式（健康暖青色系） */
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+:root {
+  /* Element Plus 主题色覆盖 */
+  --el-color-primary: #0d9488;
+  --el-color-primary-light-3: #47b3aa;
+  --el-color-primary-light-5: #7cc9c2;
+  --el-color-primary-light-7: #addcd7;
+  --el-color-primary-light-8: #c8e8e4;
+  --el-color-primary-light-9: #e4f4f2;
+  --el-color-primary-dark-2: #0a7a70;
+
+  --el-border-radius-base: 6px;
+  --el-box-shadow-light: 0 2px 12px rgba(20, 60, 55, 0.08);
+  --el-text-color-primary: #303133;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+body {
+  margin: 0;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica,
+    'Segoe UI', Arial, sans-serif;
+  font-size: 14px;
+  color: #303133;
+  background-color: #f0f4f3;
+  -webkit-font-smoothing: antialiased;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+/* 全局滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+::-webkit-scrollbar-thumb {
+  background: #c5d4d1;
+  border-radius: 3px;
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #0d9488;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 卡片：圆角 + 柔和阴影 */
+.el-card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(20, 60, 55, 0.06) !important;
+}
+
+.el-card__header {
+  padding: 14px 20px;
+  border-bottom: 1px solid #edf2f1;
+}
+
+/* 表格：浅青表头 + 悬停行 */
+.el-table {
+  --el-table-header-bg-color: #f3f8f7;
+  --el-table-header-text-color: #374b48;
+  --el-table-row-hover-bg-color: #e9f4f2;
+  --el-table-border-color: #e6edeb;
+  border-radius: 8px;
+}
+
+.el-table th.el-table__cell {
+  font-weight: 600;
+}
+
+/* 弹窗：圆角 + 标题加粗 */
+.el-dialog {
+  --el-dialog-border-radius: 12px;
+}
+
+.el-dialog__title {
+  font-weight: 600;
+}
+
+/* 按钮圆角 */
+.el-button {
+  border-radius: 6px;
+}
+
+/* 分页 */
+.el-pagination.is-background .el-pager li {
+  border-radius: 6px;
+}
+
+/* 下拉、选择等弹出层圆角 */
+.el-select-dropdown,
+.el-dropdown-menu,
+.el-picker-panel {
+  border-radius: 8px;
+}
+
+/* 标签圆角 */
+.el-tag {
+  border-radius: 4px;
 }

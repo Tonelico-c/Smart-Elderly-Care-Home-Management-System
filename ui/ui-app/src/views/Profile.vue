@@ -4,10 +4,23 @@
   import {useTokenStore} from '@/store/token.js'
   import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
+  import examPackageApi from "@/api/examPackage.js";
+  import {onMounted, ref} from "vue";
   const router = useRouter()
   const tokenStore = useTokenStore();
   const elderInfoStore = elderElderInfoStore();
   const appointmentStore = useAppointmentStore();
+
+  //上架的可用套餐数量
+  const packageCount = ref(0)
+  onMounted(() => {
+    examPackageApi.list().then(result => {
+      if (result.code === 1) {
+        packageCount.value = result.data.length
+      }
+    })
+  })
+
 
   //退出登录
   const logout = () => {
@@ -29,14 +42,14 @@
   <div class="profile-page">
     <van-nav-bar title="我的" fixed placeholder/>
 
-    <!--用户信息卡片-->
+    <!--老人信息卡片-->
     <div class="elder-card">
       <div class="avatar">
-        <van-icon name="elder-circle-o" size="56" color="#fff"/>
+        <van-icon name="user-circle-o" size="56" color="#fff"/>
       </div>
       <div class="elder-info">
         <div class="name">{{ elderInfoStore.elder.name }}</div>
-        <div class="room">{{ elderInfoStore.elder.room }} · {{ elderInfoStore.elder.age }}岁</div>
+        <div class="room">{{ elderInfoStore.elder.address }} · {{ elderInfoStore.elder.age }}岁</div>
       </div>
     </div>
 
@@ -51,7 +64,7 @@
         <div class="stat-label">待体检</div>
       </div>
       <div class="stat-item" @click="router.push('/package')">
-        <div class="stat-value" style="color: #07c160">3</div>
+        <div class="stat-value" style="color: #07c160">{{packageCount}}</div>
         <div class="stat-label">可用套餐</div>
       </div>
     </div>

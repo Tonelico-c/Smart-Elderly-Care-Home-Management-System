@@ -11,6 +11,7 @@ import com.situ.elder.pojo.entity.ElderTag;
 import com.situ.elder.pojo.entity.Tag;
 import com.situ.elder.pojo.query.ElderQuery;
 import com.situ.elder.pojo.vo.ElderExcelVO;
+import com.situ.elder.pojo.vo.ElderInfoVO;
 import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.IElderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,10 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -220,5 +219,36 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
 
         // EasyExcel 写出并下载
         ExcelUtil.exportExcel(response,elderExcelVOList,ElderExcelVO.class,"老人信息表");
+    }
+
+    @Override
+    public ElderInfoVO getElderInfo(Long elderId) {
+        Elder elder = elderMapper.selectById(elderId);
+        if (elder == null) {
+            throw new RuntimeException("老人不存在");
+        }
+        ElderInfoVO elderInfoVO = new ElderInfoVO();
+        BeanUtils.copyProperties(elder, elderInfoVO);
+        if (elder.getBirthday() != null) {
+            elderInfoVO.setBirthday(new SimpleDateFormat("yyyy-MM-dd").format(elder.getBirthday()));
+            elderInfoVO.setAge(calcAge(elder.getBirthday()));
+        }
+        return elderInfoVO;
+    }
+
+    /**
+     * 根据出生日期计算周岁年龄
+     */
+    private Integer calcAge(Date birthday) {
+        Calendar birth = Calendar.getInstance();
+        birth.setTime(birthday);
+        Calendar now = Calendar.getInstance();
+        int age = now.get(Calendar.YEAR) - birth.get(Calendar.YEAR);
+        //生日还没到，年龄减1
+        if (now.get(Calendar.MONTH) < birth.get(Calendar.MONTH)
+                || (now.get(Calendar.MONTH) == birth.get(Calendar.MONTH) && now.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH))) {
+            age--;
+        }
+        return age;
     }
 }

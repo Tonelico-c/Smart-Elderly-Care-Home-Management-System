@@ -23,6 +23,11 @@
   import {ElMessage, ElMessageBox} from "element-plus";
   const router = useRouter()
   const route = useRoute()
+
+  // 头部显示当前日期
+  const today = new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+  })
   import userApi from "@/api/user.js";
   import {UserInfoStore} from '@/store/userInfo.js'
   import {ref} from "vue";
@@ -171,11 +176,14 @@
   <!-- element-plus中的容器 -->
   <el-container class="layout-container">
     <!-- 左侧菜单 -->
-    <el-aside width="200px">
-      <div class="el-aside__logo"></div>
+    <el-aside width="220px">
+      <div class="el-aside__logo">
+        <img class="logo-img" src="@/assets/logo.png" alt="logo"/>
+        <span class="logo-title">智慧养老</span>
+      </div>
       <!-- element-plus的菜单标签 -->
       <!-- default-active 绑定当前路由,让菜单自动高亮当前页面 -->
-      <el-menu active-text-color="#ffd04b" background-color="#232323" text-color="#fff" router>
+      <el-menu :default-active="route.path" router>
         <!-- 动态生成菜单 -->
         <template v-for="(menu, index) in menuData" :index="index.toString()">
           <el-sub-menu v-if="menu.children?.length>0" :index="menu.name">
@@ -269,12 +277,17 @@
     <el-container>
       <!-- 头部区域 -->
       <el-header>
-        <div><strong>智慧养老后台管理系统{{ zhangsan }}</strong></div>
+        <div class="header-title">
+          <span class="title-dot"></span>
+          <span>智慧养老社区管理系统</span>
+          <span class="header-date">{{ today }}</span>
+        </div>
         <!-- 下拉菜单 -->
         <!-- command: 条目被点击后会触发,在事件函数上可以声明一个参数,接收条目对应的指令 -->
         <el-dropdown placement="bottom-end" @command="handleCommand">
                     <span class="el-dropdown__box">
                         <el-avatar :src="userInfoStore.user.avatar?userInfoStore.user.avatar:avatar"/>
+                        <span class="dropdown-name">{{ userInfoStore.user.name }}</span>
                         <el-icon>
                             <CaretBottom/>
                         </el-icon>
@@ -362,31 +375,112 @@
   height: 100vh;
 
   .el-aside {
-    background-color: #232323;
+    /* 深青渐变侧边栏，呼应"智慧健康"主题 */
+    background: linear-gradient(180deg, #103733 0%, #0a2622 100%);
+    box-shadow: 2px 0 8px rgba(10, 38, 34, 0.15);
+    display: flex;
+    flex-direction: column;
 
     &__logo {
-      height: 80px;
-      background: url('@/assets/logo.png') no-repeat center / 100px auto;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+
+      .logo-img {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+      }
+
+      .logo-title {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #fff;
+      }
     }
 
-    .el-menu {
+    /* 菜单：透明背景由侧边栏渐变透出，选中项用主题色圆角高亮 */
+    :deep(.el-menu) {
+      --el-menu-bg-color: transparent;
+      --el-menu-text-color: rgba(255, 255, 255, 0.68);
+      --el-menu-hover-bg-color: rgba(255, 255, 255, 0.08);
+      --el-menu-active-color: #5eead4;
+      --el-menu-sub-item-hover-bg-color: rgba(255, 255, 255, 0.08);
       border-right: none;
+      padding: 10px 12px;
+
+      .el-menu-item,
+      .el-sub-menu__title {
+        border-radius: 8px;
+        margin-bottom: 2px;
+        height: 46px;
+        line-height: 46px;
+      }
+
+      .el-menu-item.is-active {
+        background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%);
+        color: #fff !important;
+        box-shadow: 0 4px 10px rgba(13, 148, 136, 0.35);
+      }
+
+      .el-sub-menu .el-menu {
+        padding: 0 0 0 8px;
+      }
     }
   }
 
   .el-header {
+    height: 64px;
     background-color: #fff;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(20, 60, 55, 0.08);
+    position: relative;
+    z-index: 1;
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #1f3835;
+
+      .title-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d9488, #2dd4bf);
+        margin-right: 10px;
+      }
+
+      .header-date {
+        margin-left: 16px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #8aa5a1;
+      }
+    }
 
     .el-dropdown__box {
       display: flex;
       align-items: center;
+      cursor: pointer;
+
+      .dropdown-name {
+        margin-left: 10px;
+        font-size: 14px;
+        color: #4b625e;
+      }
 
       .el-icon {
-        color: #999;
-        margin-left: 10px;
+        color: #8aa5a1;
+        margin-left: 6px;
       }
 
       &:active,
@@ -396,12 +490,19 @@
     }
   }
 
+  .el-main {
+    background-color: #f0f4f3;
+    padding: 16px;
+  }
+
   .el-footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    color: #666;
+    height: 44px;
+    font-size: 13px;
+    color: #93a8a5;
+    background-color: #f0f4f3;
   }
 }
 .avatar-uploader .el-upload {

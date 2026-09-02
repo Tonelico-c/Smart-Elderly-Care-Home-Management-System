@@ -6,7 +6,11 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Date;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -45,13 +49,13 @@ public class ExamAppointment implements Serializable {
      * 预约/体检日期
      */
     @TableField("appointment_date")
-    private Date appointmentDate;
+    private LocalDate appointmentDate;
 
     /**
      * 预约/体检时间
      */
     @TableField("appointment_time")
-    private Date appointmentTime;
+    private LocalTime appointmentTime;
 
     /**
      * 体检套餐价格

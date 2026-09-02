@@ -5,6 +5,7 @@ import { useTokenStore } from '@/store/token.js'
 // 引入一个一个可能要呈现组件
 import Index from '@/views/Index.vue'
 import Login from '@/views/Login.vue'
+import Home from '@/views/Home.vue'
 import User from '@/views/User.vue'
 import Elder from '@/views/Elder.vue'
 import UserInfo from "@/views/UserInfo.vue";
@@ -35,6 +36,8 @@ const router = createRouter({
         },
         {
             path: '/', component: Index, children: [
+                { path: '', redirect: '/home' },
+                { path: '/home', component: Home },
                 { path: '/user', component: User },
                 { path: '/elder', component: Elder },
                 { path: '/user/info', component: UserInfo },

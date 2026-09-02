@@ -7,10 +7,10 @@ export const elderElderInfoStore = defineStore('elderInfo', {
         }
     },
     actions: {
-        setUserInfo(elder) {
+        setElderInfo(elder) {
             this.elder = elder
         },
-        removeUserInfo() {
+        removeElderInfo() {
             this.elder = {}
         }
     },

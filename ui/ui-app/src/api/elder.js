@@ -5,7 +5,7 @@ const elderApi = {
         return request.post("/elders/login", elder)
     },
     elderInfo() {
-        return request.get("/elders/userInfo")
+        return request.get("/elders/elderInfo")
     }
 }
 

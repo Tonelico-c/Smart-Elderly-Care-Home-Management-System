@@ -14,7 +14,7 @@
   const loadList = () => {
     loading.value = true
     appointmentApi.list().then(result => {
-      if (result.code == 1) {
+      if (result.code === 1) {
         appointmentStore.setAppointmentList(result.data)
       }
     }).finally(() => {

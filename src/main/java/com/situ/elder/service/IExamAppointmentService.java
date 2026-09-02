@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.ExamAppointment;
 import com.situ.elder.pojo.query.ExamAppointmentQuery;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.situ.elder.pojo.vo.ExamAppointmentVO;
+
+import java.util.List;
 
 /**
  * <p>
@@ -16,4 +19,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IExamAppointmentService extends IService<ExamAppointment> {
 
     IPage<ExamAppointment> list(ExamAppointmentQuery examAppointmentQuery);
+
+    List<ExamAppointmentVO> listByElderId(Long elderId);
 }

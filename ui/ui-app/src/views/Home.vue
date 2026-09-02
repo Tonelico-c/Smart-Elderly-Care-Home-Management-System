@@ -36,7 +36,7 @@
     <!--头部问候-->
     <div class="home-header">
       <div class="greeting">{{ greeting }}</div>
-      <div class="date">{{ elderInfoStore.elder.room }} · 今天也要注意身体哦</div>
+      <div class="date">{{ elderInfoStore.elder.name }} · 今天也要注意身体哦</div>
     </div>
 
     <!--健康数据卡片-->

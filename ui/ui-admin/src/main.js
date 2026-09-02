@@ -7,6 +7,7 @@ const pinia = createPinia()
 import ElementPlus from 'element-plus' //导入element-plus
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css' //导入element-plus样式
+import './assets/main.css' //导入全局主题样式
 
 //引入持久化插件
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate"
