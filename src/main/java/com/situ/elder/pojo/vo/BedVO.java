@@ -56,6 +56,21 @@ public class BedVO {
     private String elderName;
 
     /**
+     * 入住老人电话（空闲时为null）
+     */
+    private String elderPhone;
+
+    /**
+     * 入住老人身份证号（空闲时为null）
+     */
+    private String elderIdCardNo;
+
+    /**
+     * 护理等级名称（空闲时为null）
+     */
+    private String careLevelName;
+
+    /**
      * 入住时间（空闲时为null）
      */
     private Date checkInTime;

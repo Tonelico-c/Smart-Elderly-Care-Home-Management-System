@@ -8,18 +8,24 @@
         <result column="status" property="status" />
         <result column="price" property="price" />
         <result column="elder_name" property="elderName" />
+        <result column="elder_phone" property="elderPhone" />
+        <result column="elder_id_card_no" property="elderIdCardNo" />
+        <result column="care_level_name" property="careLevelName" />
         <result column="check_in_time" property="checkInTime" />
         <result column="update_time" property="updateTime" />
     </resultMap>
 
-    <!--按房间查询床位：LEFT JOIN 入住中(1)的入住记录，带出入住老人姓名和入住时间-->
+    <!--按房间查询床位：LEFT JOIN 入住中(1)的入住记录，带出入住老人信息和护理等级-->
     <select id="listByRoom" resultMap="BedVOMap">
-        SELECT be.*, e.name AS elder_name, cir.check_in_time AS check_in_time
+        SELECT be.*, e.name AS elder_name, e.phone AS elder_phone, e.id_card_no AS elder_id_card_no,
+               cl.name AS care_level_name, cir.check_in_time AS check_in_time
         FROM bed AS be
         LEFT JOIN check_in_record AS cir
         ON be.id = cir.bed_id AND cir.status = 1
         LEFT JOIN elder AS e
         ON cir.elder_id = e.id
+        LEFT JOIN care_level AS cl
+        ON cir.care_level_id = cl.id
         WHERE be.room_id = #{roomId}
         ORDER BY be.bed_no
     </select>
