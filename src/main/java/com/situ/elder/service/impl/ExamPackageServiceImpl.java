@@ -6,11 +6,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.situ.elder.mapper.ExamPackageMapper;
 import com.situ.elder.pojo.entity.ExamPackage;
 import com.situ.elder.pojo.query.ExamPackageQuery;
+import com.situ.elder.pojo.vo.ExamPackageVO;
 import com.situ.elder.service.IExamPackageService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+
+import java.util.List;
 
 /**
  * <p>
@@ -35,5 +38,15 @@ public class ExamPackageServiceImpl extends ServiceImpl<ExamPackageMapper, ExamP
                 .between(!ObjectUtils.isEmpty(examPackageQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(examPackageQuery.getEndCreateTime()), ExamPackage::getCreateTime, examPackageQuery.getBeginCreateTime(), examPackageQuery.getEndCreateTime())
                 .orderByAsc(ExamPackage::getSort);
         return examPackageMapper.selectPage(page, lambdaQueryWrapper);
+    }
+
+    @Override
+    public List<ExamPackageVO> listOnShelf() {
+        return examPackageMapper.listOnShelf();
+    }
+
+    @Override
+    public ExamPackageVO getDetail(Long id) {
+        return examPackageMapper.selectDetail(id);
     }
 }

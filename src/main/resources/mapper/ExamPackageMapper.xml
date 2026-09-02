@@ -2,4 +2,56 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.situ.elder.mapper.ExamPackageMapper">
 
+    <resultMap id="ExamPackageVOMap" type="com.situ.elder.pojo.vo.ExamPackageVO">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="price" property="price" />
+        <result column="image" property="image" />
+        <result column="description" property="description" />
+        <result column="status" property="status" />
+        <result column="sort" property="sort" />
+        <result column="create_time" property="createTime" />
+        <result column="item_count" property="itemCount" />
+    </resultMap>
+
+    <!--详情：套餐 + 关联体检项目明细，collection 一条SQL带出-->
+    <resultMap id="ExamPackageDetailVOMap" type="com.situ.elder.pojo.vo.ExamPackageVO" extends="ExamPackageVOMap">
+        <collection property="examItemList" ofType="com.situ.elder.pojo.entity.ExamItem">
+            <id column="item_id" property="id" />
+            <result column="item_name" property="name" />
+            <result column="item_price" property="price" />
+            <result column="item_unit" property="unit" />
+            <result column="item_result_type" property="resultType" />
+            <result column="item_reference_min" property="referenceMin" />
+            <result column="item_reference_max" property="referenceMax" />
+            <result column="item_reference_unit" property="referenceUnit" />
+            <result column="item_description" property="description" />
+            <result column="item_status" property="status" />
+        </collection>
+    </resultMap>
+
+    <!--上架套餐列表：子查询统计每个套餐包含的项目数-->
+    <select id="listOnShelf" resultMap="ExamPackageVOMap">
+        SELECT ep.*,
+               (SELECT COUNT(*) FROM exam_package_item epi WHERE epi.package_id = ep.id) AS item_count
+        FROM exam_package AS ep
+        WHERE ep.status = 1
+        ORDER BY ep.sort
+    </select>
+
+    <!--套餐详情：LEFT JOIN 关联表带出体检项目明细-->
+    <select id="selectDetail" resultMap="ExamPackageDetailVOMap">
+        SELECT ep.id, ep.name, ep.price, ep.image, ep.description, ep.status, ep.sort, ep.create_time,
+               ei.id AS item_id, ei.name AS item_name, ei.price AS item_price, ei.unit AS item_unit,
+               ei.result_type AS item_result_type, ei.reference_min AS item_reference_min,
+               ei.reference_max AS item_reference_max, ei.reference_unit AS item_reference_unit,
+               ei.description AS item_description, ei.status AS item_status
+        FROM exam_package AS ep
+        LEFT JOIN exam_package_item AS epi
+        ON ep.id = epi.package_id
+        LEFT JOIN exam_item AS ei
+        ON epi.exam_item_id = ei.id
+        WHERE ep.id = #{id}
+        ORDER BY epi.sort
+    </select>
 </mapper>
