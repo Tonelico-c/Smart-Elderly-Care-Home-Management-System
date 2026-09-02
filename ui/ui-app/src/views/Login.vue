@@ -6,11 +6,11 @@
   import {useRouter} from 'vue-router'
   const router = useRouter()
   import {useTokenStore} from '@/store/token.js'
-  import {useUserInfoStore} from '@/store/userInfo.js'
+  import {elderElderInfoStore} from '@/store/elderInfo.js'
   const tokenStore = useTokenStore();
-  const userInfoStore = useUserInfoStore();
+  const elderInfoStore = elderElderInfoStore();
 
-  const user = ref({
+  const elder = ref({
     name: '',
     password: ''
   })
@@ -18,19 +18,19 @@
   const loading = ref(false)
 
   const login = () => {
-    if (!user.value.name || !user.value.password) {
+    if (!elder.value.name || !elder.value.password) {
       showToast('请输入用户名和密码')
       return
     }
     loading.value = true
-    elderApi.login(user.value).then(result => {
+    elderApi.login(elder.value).then(result => {
       if (result.code == 1) {
         //登录成功，保存token
         tokenStore.setToken(result.data)
         //拉取当前登录老人的信息
-        return elderApi.userInfo().then(userInfoResult => {
-          if (userInfoResult.code == 1) {
-            userInfoStore.setUserInfo(userInfoResult.data)
+        return elderApi.elderInfo().then(elderInfoResult => {
+          if (elderInfoResult.code == 1) {
+            elderInfoStore.setElderInfo(elderInfoResult.data)
           }
           showToast('登录成功')
           router.push('/')
@@ -58,14 +58,14 @@
     <div class="login-form">
       <van-cell-group inset>
         <van-field
-            v-model="user.name"
+            v-model="elder.name"
             label="用户名"
             placeholder="请输入老人姓名"
             left-icon="manager"
             clearable
         />
         <van-field
-            v-model="user.password"
+            v-model="elder.password"
             type="password"
             label="密码"
             placeholder="请输入密码"

@@ -1,17 +1,17 @@
 import {defineStore} from 'pinia'
 
-export const useUserInfoStore = defineStore('userInfo', {
+export const elderElderInfoStore = defineStore('elderInfo', {
     state() {
         return {
-            user: {}
+            elder: {}
         }
     },
     actions: {
-        setUserInfo(user) {
-            this.user = user
+        setUserInfo(elder) {
+            this.elder = elder
         },
         removeUserInfo() {
-            this.user = {}
+            this.elder = {}
         }
     },
     persist: {

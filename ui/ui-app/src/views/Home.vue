@@ -1,14 +1,14 @@
 <script setup>
   import homeApi from '@/api/home.js'
   import {onMounted, ref, computed} from 'vue'
-  import {useUserInfoStore} from '@/store/userInfo.js'
+  import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
   import {useRouter} from 'vue-router'
   const router = useRouter()
-  const userInfoStore = useUserInfoStore();
+  const elderInfoStore = elderElderInfoStore();
   const appointmentStore = useAppointmentStore();
 
-  const greeting = computed(() => '你好，' + userInfoStore.user.name)
+  const greeting = computed(() => '你好，' + elderInfoStore.elder.name)
   const healthData = ref({})
   const notices = ref([])
   const noticeShow = ref(false)
@@ -36,7 +36,7 @@
     <!--头部问候-->
     <div class="home-header">
       <div class="greeting">{{ greeting }}</div>
-      <div class="date">{{ userInfoStore.user.room }} · 今天也要注意身体哦</div>
+      <div class="date">{{ elderInfoStore.elder.room }} · 今天也要注意身体哦</div>
     </div>
 
     <!--健康数据卡片-->

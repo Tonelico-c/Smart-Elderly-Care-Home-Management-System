@@ -4,11 +4,11 @@
   import {onMounted, ref} from 'vue'
   import {useRoute, useRouter} from 'vue-router'
   import {showToast} from 'vant'
-  import {useUserInfoStore} from '@/store/userInfo.js'
+  import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
   const route = useRoute()
   const router = useRouter()
-  const userInfoStore = useUserInfoStore();
+  const elderInfoStore = elderElderInfoStore();
   const appointmentStore = useAppointmentStore();
 
   const examPackage = ref({})
@@ -32,8 +32,8 @@
       }
     })
     //默认填登录老人的信息
-    appointment.value.elderName = userInfoStore.user.name || ''
-    appointment.value.phone = userInfoStore.user.phone || ''
+    appointment.value.elderName = elderInfoStore.elder.name || ''
+    appointment.value.phone = elderInfoStore.elder.phone || ''
   })
 
   //日期选择弹层

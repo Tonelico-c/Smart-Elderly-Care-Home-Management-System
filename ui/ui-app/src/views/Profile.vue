@@ -2,11 +2,11 @@
   import {useRouter} from 'vue-router'
   import {showConfirmDialog, showToast} from 'vant'
   import {useTokenStore} from '@/store/token.js'
-  import {useUserInfoStore} from '@/store/userInfo.js'
+  import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
   const router = useRouter()
   const tokenStore = useTokenStore();
-  const userInfoStore = useUserInfoStore();
+  const elderInfoStore = elderElderInfoStore();
   const appointmentStore = useAppointmentStore();
 
   //退出登录
@@ -16,7 +16,7 @@
       message: '确定要退出登录吗？'
     }).then(() => {
       tokenStore.removeToken()
-      userInfoStore.removeUserInfo()
+      elderInfoStore.removeElderInfo()
       //清掉这个账号的预约数据，避免换账号登录后串数据
       appointmentStore.reset()
       showToast('已退出')
@@ -30,13 +30,13 @@
     <van-nav-bar title="我的" fixed placeholder/>
 
     <!--用户信息卡片-->
-    <div class="user-card">
+    <div class="elder-card">
       <div class="avatar">
-        <van-icon name="user-circle-o" size="56" color="#fff"/>
+        <van-icon name="elder-circle-o" size="56" color="#fff"/>
       </div>
-      <div class="user-info">
-        <div class="name">{{ userInfoStore.user.name }}</div>
-        <div class="room">{{ userInfoStore.user.room }} · {{ userInfoStore.user.age }}岁</div>
+      <div class="elder-info">
+        <div class="name">{{ elderInfoStore.elder.name }}</div>
+        <div class="room">{{ elderInfoStore.elder.room }} · {{ elderInfoStore.elder.age }}岁</div>
       </div>
     </div>
 
@@ -58,7 +58,7 @@
 
     <!--菜单-->
     <van-cell-group inset class="menu-card">
-      <van-cell title="个人资料" icon="user-o" is-link/>
+      <van-cell title="个人资料" icon="elder-o" is-link/>
       <van-cell title="健康档案" icon="records" is-link/>
       <van-cell title="我的预约" icon="clock-o" is-link @click="router.push('/appointment')"/>
       <van-cell title="体检报告" icon="notes-o" is-link/>
@@ -78,7 +78,7 @@
     padding-bottom: 30px;
   }
 
-  .user-card {
+  .elder-card {
     display: flex;
     align-items: center;
     margin: 12px 16px 0;
@@ -92,7 +92,7 @@
       justify-content: center;
     }
 
-    .user-info {
+    .elder-info {
       flex: 1;
       margin-left: 14px;
 
