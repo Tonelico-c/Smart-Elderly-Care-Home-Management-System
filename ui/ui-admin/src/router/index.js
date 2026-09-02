@@ -14,6 +14,7 @@ import CareLevel from "@/views/CareLevel.vue";
 import CarePlan from "@/views/CarePlan.vue";
 import CareTask from "@/views/CareTask.vue";
 import ExamItem from "@/views/ExamItem.vue";
+import ExamPackage from "@/views/ExamPackage.vue";
 import Building from "@/views/Building.vue";
 import Role from "@/views/Role.vue";
 import Permission from "@/views/Permission.vue";
@@ -42,6 +43,7 @@ const router = createRouter({
                 { path: '/care-plan', component: CarePlan },
                 { path: '/care-task', component: CareTask },
                 { path: '/exam-item', component: ExamItem },
+                { path: '/exam-package', component: ExamPackage },
                 { path: '/building', component: Building },
                 { path: '/room', component: Room },
                 { path: '/bed', component: Bed },

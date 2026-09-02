@@ -1,6 +1,8 @@
 package com.situ.elder.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.situ.elder.pojo.entity.ExamPackage;
+import com.situ.elder.pojo.query.ExamPackageQuery;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IExamPackageService extends IService<ExamPackage> {
 
+    IPage<ExamPackage> list(ExamPackageQuery examPackageQuery);
 }
