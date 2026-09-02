@@ -19,6 +19,15 @@ const examPackageApi = {
     },
     selectById(id){
         return request.get(`/exam-packages/${id}`)
+    },
+    //查询套餐已分配的体检项目id列表
+    selectAssignedItem(packageId){
+        return request.get(`/exam-package-item/selectAssignedItem/${packageId}`)
+    },
+    //给套餐分配体检项目
+    //examItemIds是数组,序列化成"1,2,3"再传,后端Spring会自动转成Long[]
+    assignItem(packageId, examItemIds){
+        return request.post("/exam-package-item/assignItem", null, {params: {packageId, examItemIds: examItemIds.join(',')}})
     }
 }
 

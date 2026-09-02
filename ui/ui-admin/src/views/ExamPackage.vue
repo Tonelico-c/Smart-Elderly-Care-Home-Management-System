@@ -2,6 +2,7 @@
 
   import {ref} from "vue";
   import examPackageApi from "@/api/examPackage.js";
+  import examItemApi from "@/api/examItem.js";
   import {Delete, Plus, Search, Refresh} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
   import {useTokenStore} from '@/store/token.js'
@@ -136,6 +137,42 @@
       examPackage.value.image = res.data
   }
 
+  // ===== 给套餐分配体检项目(穿梭框) =====
+  const assignDialogVisible = ref(false)
+  const currentPackage = ref({})
+  // 穿梭框的数据源,每项必须是 {key, label, disabled} 结构
+  const examItemData = ref([])
+  // 穿梭框右侧已选中的体检项目id数组(v-model双向绑定)
+  const assignedItemIds = ref([])
+
+  const showAssignDialog = (row) => {
+    currentPackage.value = row
+    assignDialogVisible.value = true
+    // 加载所有启用的体检项目,作为穿梭框左侧可选数据
+    examItemApi.list({page: 1, limit: 9999, status: 1}).then(result => {
+      examItemData.value = result.data.records.map(item => ({
+        key: item.id,
+        label: item.name,
+        disabled: false
+      }))
+    })
+    // 加载该套餐已分配的项目id,回显到穿梭框右侧
+    examPackageApi.selectAssignedItem(row.id).then(result => {
+      assignedItemIds.value = result.data
+    })
+  }
+
+  const assignItem = () => {
+    examPackageApi.assignItem(currentPackage.value.id, assignedItemIds.value).then(result => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg)
+        assignDialogVisible.value = false
+      } else {
+        ElMessage.error(result.msg)
+      }
+    })
+  }
+
   // 状态选项：0下架 1上架
   const statusOptions = [
     {value: 0, label: '下架'},
@@ -206,9 +243,10 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
-      <el-table-column align="center" width="200px" fixed="right" label="操作">
+      <el-table-column align="center" width="280px" fixed="right" label="操作">
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
+          <el-button size="small" type="warning" @click="showAssignDialog(row)" >分配项目</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)"  >删除</el-button>
         </template>
       </el-table-column>
@@ -269,6 +307,30 @@
       <div class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button type="primary" @click="addOrUpdate">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--分配体检项目弹出框(穿梭框)-->
+  <el-dialog v-model="assignDialogVisible" :title="'给【' + currentPackage.name + '】分配体检项目'" width="700" :lock-scroll="false" :close-on-click-modal="false">
+    <!--
+      v-model: 右侧已选中的key数组(即选中的体检项目id)
+      :data: 穿梭框数据源,每项必须是 {key, label, disabled} 结构
+      filterable: 开启搜索框,按label过滤项目名
+    -->
+    <el-transfer
+        v-model="assignedItemIds"
+        :data="examItemData"
+        :titles="['可选体检项目', '已选体检项目']"
+        filterable
+        filter-placeholder="请输入项目名"
+    />
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="assignDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="assignItem">
           确认
         </el-button>
       </div>
