@@ -18,6 +18,7 @@ import Role from "@/views/Role.vue";
 import Permission from "@/views/Permission.vue";
 import Room from "@/views/Room.vue";
 import Bed from "@/views/Bed.vue";
+import CheckIn from "@/views/CheckIn.vue";
 
 
 
@@ -42,6 +43,7 @@ const router = createRouter({
                 { path: '/building', component: Building },
                 { path: '/room', component: Room },
                 { path: '/bed', component: Bed },
+                { path: '/checkin', component: CheckIn },
                 { path: '/role', component: Role },
                 { path: '/permission', component: Permission }
             ]

@@ -148,6 +148,7 @@
     {
       name: '业务管理', icon: 'Notebook', children: [
       {name: '老人管理', icon: 'UserFilled', path: "/elder"},
+      {name: '入住分配', icon: 'House', path: "/checkin"},
       {name: '标签管理', icon: 'CollectionTag', path: "/tag"},
     ]
     },

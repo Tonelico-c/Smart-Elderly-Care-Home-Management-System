@@ -26,6 +26,21 @@ public class BedVO {
     private String bedNo;
 
     /**
+     * 房间号（入住分配联表查询用）
+     */
+    private String roomNo;
+
+    /**
+     * 楼栋ID（入住分配联表查询用）
+     */
+    private Long buildingId;
+
+    /**
+     * 楼栋名称（入住分配联表查询用）
+     */
+    private String buildingName;
+
+    /**
      * 状态（0：空闲，1：入住，2：维修，3：停用）
      */
     private Integer status;

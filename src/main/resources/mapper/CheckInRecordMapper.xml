@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.situ.elder.mapper.CheckInRecordMapper">
+    <resultMap id="CheckInRecordVOMap" type="com.situ.elder.pojo.vo.CheckInRecordVO">
+        <id column="id" property="id" />
+        <result column="elder_id" property="elderId" />
+        <result column="elder_name" property="elderName" />
+        <result column="id_card_no" property="idCardNo" />
+        <result column="phone" property="phone" />
+        <result column="building_id" property="buildingId" />
+        <result column="building_name" property="buildingName" />
+        <result column="room_id" property="roomId" />
+        <result column="room_no" property="roomNo" />
+        <result column="bed_id" property="bedId" />
+        <result column="bed_no" property="bedNo" />
+        <result column="care_level_id" property="careLevelId" />
+        <result column="care_level_name" property="careLevelName" />
+        <result column="check_in_time" property="checkInTime" />
+        <result column="check_out_time" property="checkOutTime" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <select id="list" resultMap="CheckInRecordVOMap">
+        SELECT cir.*, e.name AS elder_name, e.id_card_no, e.phone,
+        bu.building_name AS building_name, r.room_no, be.bed_no,
+        cl.name AS care_level_name
+        FROM check_in_record AS cir
+        LEFT JOIN elder AS e ON cir.elder_id = e.id
+        LEFT JOIN building AS bu ON cir.building_id = bu.id
+        LEFT JOIN room AS r ON cir.room_id = r.id
+        LEFT JOIN bed AS be ON cir.bed_id = be.id
+        LEFT JOIN care_level AS cl ON cir.care_level_id = cl.id
+        <where>
+            <if test="checkInRecordQuery.elderName != null and checkInRecordQuery.elderName != ''">
+                AND e.name LIKE CONCAT('%', #{checkInRecordQuery.elderName}, '%')
+            </if>
+            <if test="checkInRecordQuery.buildingId != null">
+                AND cir.building_id = #{checkInRecordQuery.buildingId}
+            </if>
+            <if test="checkInRecordQuery.roomId != null">
+                AND cir.room_id = #{checkInRecordQuery.roomId}
+            </if>
+            <if test="checkInRecordQuery.status != null">
+                AND cir.status = #{checkInRecordQuery.status}
+            </if>
+        </where>
+        ORDER BY cir.create_time DESC
+    </select>
+
+    <resultMap id="AvailableBedMap" type="com.situ.elder.pojo.vo.BedVO">
+        <id column="id" property="id" />
+        <result column="room_id" property="roomId" />
+        <result column="bed_no" property="bedNo" />
+        <result column="room_no" property="roomNo" />
+        <result column="building_id" property="buildingId" />
+        <result column="building_name" property="buildingName" />
+        <result column="price" property="price" />
+    </resultMap>
+
+    <!-- TODO 查询空闲床位：只返回当前没有 status=1（入住中）记录的床位 -->
+    <select id="listAvailableBeds" resultMap="AvailableBedMap">
+        SELECT be.id, be.room_id, be.bed_no, be.price,
+        r.room_no, r.building_id, bu.building_name
+        FROM bed AS be
+        LEFT JOIN room AS r ON be.room_id = r.id
+        LEFT JOIN building AS bu ON r.building_id = bu.id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM check_in_record cir
+            WHERE cir.bed_id = be.id AND cir.status = 1
+        )
+        <if test="buildingId != null">
+            AND r.building_id = #{buildingId}
+        </if>
+        <if test="roomId != null">
+            AND be.room_id = #{roomId}
+        </if>
+    </select>
+</mapper>
