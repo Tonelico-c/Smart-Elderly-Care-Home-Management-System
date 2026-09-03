@@ -2,7 +2,9 @@ package com.situ.elder.service.impl;
 
 import com.situ.elder.service.IChatService;
 import com.situ.elder.service.IElderService;
+import com.situ.elder.service.IExamAppointmentService;
 import com.situ.elder.tools.ElderTools;
+import com.situ.elder.tools.ExamAppointmentTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -22,6 +24,8 @@ public class ChatServiceImpl implements IChatService {
     private ChatClient chatClient;
     @Autowired
     private IElderService elderService;
+    @Autowired
+    private IExamAppointmentService examAppointmentService;
 
     @Override
     public String chat(String message, Integer conversationId) {
@@ -34,6 +38,7 @@ public class ChatServiceImpl implements IChatService {
                     // 会话记忆按 conversationId（老人id）隔离，避免不同用户上下文串扰
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                     .tools(new ElderTools(conversationId,elderService))
+                    .tools(new ExamAppointmentTools(conversationId, examAppointmentService))
                     .call()
                     .content();
         } catch (Exception e) {
@@ -52,6 +57,7 @@ public class ChatServiceImpl implements IChatService {
                 // 会话记忆按 conversationId（老人id）隔离，避免不同用户上下文串扰
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .tools(new ElderTools(conversationId,elderService))
+                .tools(new ExamAppointmentTools(conversationId, examAppointmentService))
                 .stream()
                 .content()
                 // 模型调用失败时也要发出提示和结束标记，避免前端一直处于等待状态
