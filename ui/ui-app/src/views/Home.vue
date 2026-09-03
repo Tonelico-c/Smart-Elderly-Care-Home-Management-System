@@ -1,5 +1,6 @@
 <script setup>
   import homeApi from '@/api/home.js'
+  import appointmentApi from '@/api/appointment.js'
   import {onMounted, ref, computed} from 'vue'
   import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
@@ -9,18 +10,86 @@
   const appointmentStore = useAppointmentStore();
 
   const greeting = computed(() => '你好，' + elderInfoStore.elder.name)
-  const healthData = ref({})
   const notices = ref([])
   const noticeShow = ref(false)
 
   onMounted(() => {
-    homeApi.healthData().then(result => {
-      healthData.value = result.data
-    })
     homeApi.notices().then(result => {
       notices.value = result.data
     })
+    loadLatestExam()
   })
+
+  //最近一次已完成体检的预约及项目明细
+  const latestExam = ref(null)
+  const latestItems = ref([])
+
+  const loadLatestExam = () => {
+    appointmentApi.list().then(result => {
+      if (result.code !== 1) {
+        return
+      }
+      //列表已按预约日期倒序，取最近一个已完成的预约
+      latestExam.value = (result.data || []).find(item => item.status === 2) || null
+      if (latestExam.value) {
+        appointmentApi.listItems(latestExam.value.id).then(res => {
+          latestItems.value = res.data || []
+        })
+      }
+    })
+  }
+
+  //格式化单项结果：数值型显示数值（单位并入标签），文本型直接显示
+  const formatValue = (item) => {
+    if (item.resultType === 1) {
+      return item.resultValue != null ? String(item.resultValue) : '-'
+    }
+    return item.resultText || '-'
+  }
+
+  //健康数据卡片展示的项：优先匹配 血压/心率/血糖，不足时用其他有结果的项目补齐
+  const healthItems = computed(() => {
+    const withResult = latestItems.value.filter(item =>
+        item.resultValue != null || (item.resultText && item.resultText.trim()))
+    const picked = []
+    const keywordPrefs = [['血压'], ['心率', '脉搏'], ['血糖']]
+    for (const keywords of keywordPrefs) {
+      if (picked.length >= 3) break
+      const hit = withResult.find(item =>
+          !picked.includes(item) && keywords.some(k => (item.itemName || '').includes(k)))
+      if (hit) {
+        picked.push(hit)
+      }
+    }
+    //数值型结果优先展示（适合大数字卡片），文本型兜底补位
+    const sorted = [...withResult].sort((a, b) => (b.resultType === 1 ? 1 : 0) - (a.resultType === 1 ? 1 : 0))
+    for (const item of sorted) {
+      if (picked.length >= 3) break
+      if (!picked.includes(item)) {
+        picked.push(item)
+      }
+    }
+    //没有可展示的结果时显示占位
+    if (!picked.length) {
+      return [
+        {value: '-', label: '血压(mmHg)'},
+        {value: '-', label: '心率(次/分)'},
+        {value: '-', label: '血糖(mmol/L)'}
+      ]
+    }
+    return picked.map(item => ({
+      value: formatValue(item),
+      //数值型把单位拼进标签，如 血糖(mmol/L)
+      label: item.resultType === 1 && item.unit ? `${item.itemName}(${item.unit})` : item.itemName
+    }))
+  })
+
+  const hasExam = computed(() => !!latestExam.value)
+
+  //点击健康卡片：有体检报告去我的预约查看，没有去挑选套餐
+  const goHealth = () => {
+    router.push(hasExam.value ? '/appointment' : '/package')
+  }
 
   //快捷入口
   const shortcuts = [
@@ -39,22 +108,21 @@
       <div class="date">{{ elderInfoStore.elder.name }} · 今天也要注意身体哦</div>
     </div>
 
-    <!--健康数据卡片-->
-    <div class="health-card">
-      <div class="health-title">今日健康数据</div>
+    <!--健康数据卡片：展示最近一次体检结果-->
+    <div class="health-card" @click="goHealth">
+      <div class="health-title">
+        <span>{{ hasExam ? '最近体检数据' : '今日健康数据' }}</span>
+        <span v-if="hasExam" class="health-date">{{ latestExam.appointmentDate }}</span>
+      </div>
       <div class="health-grid">
-        <div class="health-item">
-          <div class="value">{{ healthData.bloodPressure }}</div>
-          <div class="label">血压(mmHg)</div>
+        <div class="health-item" v-for="(item, index) in healthItems" :key="index">
+          <div class="value">{{ item.value }}</div>
+          <div class="label">{{ item.label }}</div>
         </div>
-        <div class="health-item">
-          <div class="value">{{ healthData.heartRate }}</div>
-          <div class="label">心率(次/分)</div>
-        </div>
-        <div class="health-item">
-          <div class="value">{{ healthData.bloodSugar }}</div>
-          <div class="label">血糖(mmol/L)</div>
-        </div>
+      </div>
+      <div class="health-source">
+        {{ hasExam ? '数据来自最近一次体检报告，点击查看' : '暂无体检报告，点击去预约' }}
+        <van-icon name="arrow"/>
       </div>
     </div>
 
@@ -143,10 +211,31 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 
     .health-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 15px;
       font-weight: bold;
       color: #323233;
       margin-bottom: 12px;
+
+      .health-date {
+        font-size: 11px;
+        font-weight: normal;
+        color: #969799;
+      }
+    }
+
+    .health-source {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f2f3f5;
+      font-size: 11px;
+      color: #969799;
     }
 
     .health-grid {
@@ -154,18 +243,26 @@
 
       .health-item {
         flex: 1;
+        min-width: 0; //允许内容收缩，防止长文本撑破布局
+        padding: 0 4px;
         text-align: center;
 
         .value {
-          font-size: 20px;
+          font-size: 18px;
           font-weight: bold;
           color: #1989fa;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .label {
           margin-top: 4px;
           font-size: 11px;
           color: #969799;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
     }

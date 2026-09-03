@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### 本地配置文件（含数据库密码、AI密钥等敏感信息，不入库） ###
+src/main/resources/application.yml
+
 ### STS ###
 .apt_generated
 .classpath

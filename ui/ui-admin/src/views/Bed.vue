@@ -6,6 +6,7 @@
   import roomApi from "@/api/room.js";
   import {Delete, Plus, Refresh} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
+  import checkInApi from "@/api/checkin.js";
 
   const list = ref([])
 
@@ -137,6 +138,35 @@
     if (status === 2) return 'warning'
     return 'info'
   }
+
+  // ==================== 退住 ====================
+  const checkoutDialogVisible = ref(false)
+  const checkoutForm = ref({})
+
+  const showCheckoutDialog = (row) => {
+    checkoutForm.value = {
+      id: row.id,
+      bedId: row.bedId,
+      checkOutTime: ''
+    }
+    checkoutDialogVisible.value = true
+  }
+
+  const submitCheckout = () => {
+    if (!checkoutForm.value.checkOutTime) {
+      ElMessage.warning('请选择退住时间')
+      return
+    }
+    checkInApi.checkout(checkoutForm.value.id, checkoutForm.value).then(result => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg)
+        checkoutDialogVisible.value = false
+        loadData()
+      } else {
+        ElMessage.error(result.msg)
+      }
+    })
+  }
 </script>
 
 <template>
@@ -216,6 +246,7 @@
           <el-table-column align="center" width="200px" fixed="right" label="操作">
             <template #default="{ row }">
               <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
+              <el-button :disabled="row.status !== 1" size="small" type="warning" @click="showCheckoutDialog(row)">退住</el-button>
               <el-button size="small" type="danger" @click="deleteById(row.id)" >删除</el-button>
             </template>
           </el-table-column>
@@ -255,6 +286,26 @@
         <el-button type="primary" @click="addOrUpdate">
           确认
         </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--退住弹窗-->
+  <el-dialog v-model="checkoutDialogVisible" title="退住办理" width="500" :lock-scroll="false" :close-on-click-modal="false">
+    <el-form :model="checkoutForm">
+      <el-form-item label="退住时间" :label-width="80">
+        <el-date-picker
+            v-model="checkoutForm.checkOutTime"
+            type="datetime"
+            placeholder="请选择退住时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="checkoutDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitCheckout">确认退住</el-button>
       </div>
     </template>
   </el-dialog>

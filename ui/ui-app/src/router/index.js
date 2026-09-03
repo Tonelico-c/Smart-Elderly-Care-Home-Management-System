@@ -11,6 +11,7 @@ import AppointmentForm from '@/views/AppointmentForm.vue'
 import MyAppointment from '@/views/MyAppointment.vue'
 import Profile from '@/views/Profile.vue'
 import Chat from '@/views/Chat.vue'
+import ExamReport from '@/views/ExamReport.vue'
 
 //创建路由器
 const router = createRouter({
@@ -29,7 +30,8 @@ const router = createRouter({
         //独立页面（不在底部Tabbar内）
         { path: '/package/:id', component: PackageDetail },
         { path: '/appointment-form/:packageId', component: AppointmentForm },
-        { path: '/chat', component: Chat }
+        { path: '/chat', component: Chat },
+        { path: '/report/:id', component: ExamReport }
     ]
 })
 

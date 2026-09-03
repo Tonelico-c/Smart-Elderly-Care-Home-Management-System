@@ -413,11 +413,12 @@
                   style="width: 140px"
                   @change="onResultValueChange(row)"
               />
+              <span>{{ row.unit }}</span>
             </div>
             <el-input v-else v-model="row.resultText" placeholder="请输入体检结果"/>
           </template>
           <span v-else>
-            {{ row.resultType === 1 ? (row.resultValue != null ? row.resultValue : '-') : (row.resultText || '-') }}
+            {{ row.resultType === 1 ? (row.resultValue != null ? row.resultValue + (row.unit ? ' ' + row.unit : '') : '-') : (row.resultText || '-') }}
           </span>
         </template>
       </el-table-column>
