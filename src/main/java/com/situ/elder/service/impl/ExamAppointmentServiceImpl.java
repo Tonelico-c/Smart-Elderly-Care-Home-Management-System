@@ -366,6 +366,7 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
      * @return 生成的明细快照列表（套餐无有效项目时返回空列表）
      */
     private List<ExamAppointmentItem> createItemsFromPackage(ExamAppointment examAppointment) {
+        // 查询套餐项目关联表
         List<ExamPackageItem> examPackageItemList = examPackageItemService.lambdaQuery()
                 .eq(ExamPackageItem::getPackageId, examAppointment.getPackageId())
                 .orderByAsc(ExamPackageItem::getSort)
