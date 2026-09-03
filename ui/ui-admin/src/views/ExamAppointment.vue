@@ -292,7 +292,7 @@
       <el-table-column align="center" width="280px" fixed="right" label="操作">
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
-          <el-button v-if="row.status === 0 || row.status === 1 || row.status === 2" size="small" type="warning" @click="showResultDialog(row)" >体检结果</el-button>
+          <el-button :disabled="row.status !== 0 && row.status !== 1 && row.status !== 2" size="small" type="warning" @click="showResultDialog(row)" >体检结果</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)"  >删除</el-button>
         </template>
       </el-table-column>

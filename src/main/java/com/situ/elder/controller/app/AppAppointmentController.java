@@ -1,6 +1,7 @@
 package com.situ.elder.controller.app;
 
 import com.situ.elder.pojo.dto.AppAppointmentDTO;
+import com.situ.elder.pojo.vo.ExamAppointmentItemVO;
 import com.situ.elder.pojo.vo.ExamAppointmentVO;
 import com.situ.elder.service.IExamAppointmentService;
 import com.situ.elder.utils.JwtUtil;
@@ -49,6 +50,15 @@ public class AppAppointmentController {
         examAppointmentService.cancel(id, elderId);
         return Result.ok("取消成功");
     }
+
+    /**
+     * 查询预约的体检项目明细（含结果类型、单位、参考范围）
+     */
+    @GetMapping("/{id}/items")
+    public Result<List<ExamAppointmentItemVO>> listItems(@PathVariable Long id){
+        return Result.ok(examAppointmentService.listItems(id));
+    }
+
     /**
      * 从token中获取老人ID
      */
