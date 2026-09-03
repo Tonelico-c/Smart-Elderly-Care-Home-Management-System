@@ -59,17 +59,45 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
     @Autowired
     private RoomMapper roomMapper;
 
+    /**
+     * 分页查询入住记录列表
+     * <p>
+     * 根据查询条件（老人姓名、楼栋、房间、入住/退住状态等）分页查询入住记录，
+     * 联表查出老人姓名、床位编号、楼栋名称等展示信息。
+     *
+     * @param checkInRecordQuery 列表查询条件（含分页参数）
+     * @return 分页后的入住记录视图对象列表
+     */
     @Override
     public IPage<CheckInRecordVO> list(CheckInRecordQuery checkInRecordQuery) {
         IPage<CheckInRecordVO> page = new Page<>(checkInRecordQuery.getPage(), checkInRecordQuery.getLimit());
         return checkInRecordMapper.list(page, checkInRecordQuery);
     }
 
+    /**
+     * 查询可分配（空闲）的床位列表
+     * <p>
+     * 办理入住时供前端选择床位使用。可按楼栋、房间进一步筛选，
+     * 只返回状态为空闲且没有被在住记录占用的床位，并附带楼栋/房间名称。
+     *
+     * @param buildingId 楼栋 id（可选，为 null 时不按楼栋过滤）
+     * @param roomId     房间 id（可选，为 null 时不按房间过滤）
+     * @return 可分配床位视图对象列表
+     */
     @Override
     public List<BedVO> listAvailableBeds(Long buildingId, Long roomId) {
         return checkInRecordMapper.listAvailableBeds(buildingId, roomId);
     }
 
+    /**
+     * 查询可办理入住的老人列表
+     * <p>
+     * 只返回可以办理入住的老人：状态为启用（1）、请假（2）、已退住（5）的老人。
+     * 已是"入住中（4）"的老人不可重复办理，禁用（0）和退住中（3）的老人也不可选。
+     * 查询结果转换为 ElderVo 返回给前端展示。
+     *
+     * @return 可办理入住的老人视图对象列表
+     */
     @Override
     public List<ElderVo> listAvailableElder() {
         LambdaQueryWrapper<Elder> lambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -82,6 +110,23 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
         }).toList();
     }
 
+    /**
+     * 办理老人入住
+     * <p>
+     * 整体流程在一个事务中执行，任一步骤失败（抛出异常）则全部回滚：
+     * <ol>
+     *     <li>校验床位存在且状态为空闲，排除维修/停用/已占用的情况；</li>
+     *     <li>校验该床位没有其他"在住"状态的记录，防止并发下重复分配同一床位；</li>
+     *     <li>校验该老人没有其他"在住"状态的记录，防止重复办理入住；</li>
+     *     <li>根据床位反查房间，补全记录上的房间 id 和楼栋 id；</li>
+     *     <li>保存入住记录（状态置为在住，入住时间为空则默认当前时间）；</li>
+     *     <li>将床位状态同步更新为"入住"；</li>
+     *     <li>将老人状态同步更新为"入住中"。</li>
+     * </ol>
+     *
+     * @param checkInRecord 前端提交的入住记录（须包含老人 id 和床位 id）
+     * @throws ServiceException 床位不存在、床位不可分配、床位已被占用或老人已入住时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addCheckIn(CheckInRecord checkInRecord) {
@@ -130,6 +175,21 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
         elderMapper.updateById(elderUpdate);
     }
 
+    /**
+     * 办理老人退住
+     * <p>
+     * 整体流程在一个事务中执行，任一步骤失败则全部回滚：
+     * <ol>
+     *     <li>校验入住记录存在且状态为"在住"，已退住的记录不允许重复退住；</li>
+     *     <li>将记录状态改为已退住（0），退住时间为空则默认当前时间；</li>
+     *     <li>将床位状态释放为"空闲"，便于后续重新分配；</li>
+     *     <li>将老人状态同步更新为"已退住"。</li>
+     * </ol>
+     *
+     * @param id           入住记录 id
+     * @param checkOutTime 退住时间（为 null 时取当前时间）
+     * @throws ServiceException 记录不存在或已退住时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void checkout(Long id, Date checkOutTime) {

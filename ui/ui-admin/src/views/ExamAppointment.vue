@@ -171,6 +171,44 @@
     const map = {0: 'info', 1: 'warning', 2: 'success', 3: 'danger', 4: 'info'}
     return map[status] || 'info'
   }
+
+  // 体检结果
+  const resultDialogVisible = ref(false)
+  const resultItems = ref([])
+  const resultAppointment = ref({})
+  // 待体检/体检中可编辑结果，已完成只读展示
+  const resultEditable = ref(false)
+
+  const showResultDialog = (row) => {
+    resultAppointment.value = row
+    resultEditable.value = row.status === 0 || row.status === 1
+    resultDialogVisible.value = true
+    examAppointmentApi.listItems(row.id).then(result => {
+      resultItems.value = (result.data || []).map(item => ({...item, abnormal: item.abnormal ?? 0}))
+    })
+  }
+
+  // 数值型结果变化时，若有参考范围则自动判断是否异常
+  const onResultValueChange = (row) => {
+    if (row.resultType === 1 && row.resultValue != null
+        && (row.referenceMin != null || row.referenceMax != null)) {
+      const outOfRange = (row.referenceMin != null && row.resultValue < row.referenceMin)
+          || (row.referenceMax != null && row.resultValue > row.referenceMax)
+      row.abnormal = outOfRange ? 1 : 0
+    }
+  }
+
+  const saveResults = () => {
+    examAppointmentApi.saveResults(resultAppointment.value.id, resultItems.value).then(result => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg)
+        resultDialogVisible.value = false
+        loadData()
+      } else {
+        ElMessage.error(result.msg)
+      }
+    })
+  }
 </script>
 
 <template>
@@ -251,9 +289,10 @@
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="150"/>
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
-      <el-table-column align="center" width="200px" fixed="right" label="操作">
+      <el-table-column align="center" width="280px" fixed="right" label="操作">
         <template #default="{ row }">
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
+          <el-button v-if="row.status === 0 || row.status === 1 || row.status === 2" size="small" type="warning" @click="showResultDialog(row)" >体检结果</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)"  >删除</el-button>
         </template>
       </el-table-column>
@@ -329,6 +368,83 @@
       <div class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button type="primary" @click="addOrUpdate">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--体检结果弹出框-->
+  <el-dialog v-model="resultDialogVisible" title="体检结果" width="850" :lock-scroll="false" :close-on-click-modal="false">
+    <!--预约信息-->
+    <el-descriptions :column="3" border style="margin-bottom: 16px">
+      <el-descriptions-item label="老人">
+        {{ elderOptions.find(item => item.id === resultAppointment.elderId)?.name || resultAppointment.elderId }}
+      </el-descriptions-item>
+      <el-descriptions-item label="体检套餐">
+        {{ packageOptions.find(item => item.id === resultAppointment.packageId)?.name || resultAppointment.packageId }}
+      </el-descriptions-item>
+      <el-descriptions-item label="状态">
+        <el-tag :type="statusTagType(resultAppointment.status)">
+          {{ statusOptions.find(item => item.value === resultAppointment.status)?.label || resultAppointment.status }}
+        </el-tag>
+      </el-descriptions-item>
+    </el-descriptions>
+
+    <!--体检项目列表：待体检/体检中可编辑，已完成只读展示-->
+    <el-table :data="resultItems" border>
+      <el-table-column prop="itemName" label="体检项目" width="140"/>
+      <el-table-column label="参考范围" width="170">
+        <template #default="{ row }">
+          <span v-if="row.referenceMin != null || row.referenceMax != null">
+            {{ row.referenceMin ?? '-' }} ~ {{ row.referenceMax ?? '-' }} {{ row.referenceUnit || '' }}
+          </span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="体检结果" min-width="180">
+        <template #default="{ row }">
+          <template v-if="resultEditable">
+            <div v-if="row.resultType === 1" style="display: flex; align-items: center; gap: 6px">
+              <el-input-number
+                  v-model="row.resultValue"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 140px"
+                  @change="onResultValueChange(row)"
+              />
+            </div>
+            <el-input v-else v-model="row.resultText" placeholder="请输入体检结果"/>
+          </template>
+          <span v-else>
+            {{ row.resultType === 1 ? (row.resultValue != null ? row.resultValue : '-') : (row.resultText || '-') }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="是否异常" width="110">
+        <template #default="{ row }">
+          <el-select v-if="resultEditable" v-model="row.abnormal">
+            <el-option :value="0" label="正常"/>
+            <el-option :value="1" label="异常"/>
+          </el-select>
+          <el-tag v-else :type="row.abnormal === 1 ? 'danger' : 'success'">
+            {{ row.abnormal === 1 ? '异常' : '正常' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="备注" min-width="140">
+        <template #default="{ row }">
+          <el-input v-if="resultEditable" v-model="row.remark" placeholder="请输入备注"/>
+          <span v-else>{{ row.remark || '-' }}</span>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-empty v-if="resultItems.length === 0" description="该套餐暂无体检项目" :image-size="80"/>
+
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="resultDialogVisible = false">关闭</el-button>
+        <el-button v-if="resultEditable" type="primary" @click="saveResults">
           确认
         </el-button>
       </div>
