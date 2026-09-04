@@ -277,7 +277,6 @@
         </template>
       </el-table-column>
       <el-table-column prop="name" label="名字" width="100"/>
-      <el-table-column prop="password" label="密码" width="100"/>
       <el-table-column prop="idCardNo" label="身份证号" width="150"/>
       <el-table-column prop="birthday" label="出生日期" width="120"/>
       <el-table-column prop="phone" label="电话" width="120"/>

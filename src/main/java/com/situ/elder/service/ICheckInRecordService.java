@@ -7,6 +7,7 @@ import com.situ.elder.pojo.query.CheckInRecordQuery;
 import com.situ.elder.pojo.vo.BedVO;
 import com.situ.elder.pojo.vo.CheckInRecordVO;
 import com.situ.elder.pojo.vo.ElderVo;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Date;
 import java.util.List;
@@ -45,4 +46,9 @@ public interface ICheckInRecordService extends IService<CheckInRecord> {
      * 退住：更新记录状态，同步释放床位、更新老人状态
      */
     void checkout(Long id, Date checkOutTime);
+
+    /**
+     * 老人换房，更新记录床位信息，同步更新床位状态
+     */
+    void updateRoom(Long id,CheckInRecord checkInRecord);
 }

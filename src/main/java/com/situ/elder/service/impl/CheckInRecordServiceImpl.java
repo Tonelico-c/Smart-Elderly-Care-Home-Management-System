@@ -213,4 +213,43 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
         elderUpdate.setStatus(ELDER_STATUS_CHECKED_OUT);
         elderMapper.updateById(elderUpdate);
     }
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateRoom(Long id,CheckInRecord checkInRecord) {
+        Bed bed = bedMapper.selectById(checkInRecord.getBedId());
+        // 1. 校验记录存在且入住中
+        CheckInRecord record = checkInRecordMapper.selectById(id);
+        if (record == null || record.getStatus() == null || record.getStatus() != 1) {
+            throw new ServiceException("该记录不存在或已退住");
+        }
+        // 2. 更新记录的房间和床位信息
+        record.setStatus(0);
+        record.setCheckOutTime(checkInRecord.getCheckOutTime() != null ? checkInRecord.getCheckOutTime() : new Date());
+        this.updateById(record);
+        // 3. 释放床位
+        Bed bedUpdate = new Bed();
+        bedUpdate.setId(record.getBedId());
+        bedUpdate.setStatus(BED_STATUS_FREE);
+        bedMapper.updateById(bedUpdate);
+        // 4. 根据床位补全房间、楼栋信息
+        Room room = roomMapper.selectById(bed.getRoomId());
+        if (room != null) {
+            checkInRecord.setRoomId(room.getId());
+            checkInRecord.setBuildingId(room.getBuildingId());
+        }
+        // 新记录主键由数据库自增生成，忽略前端误传的id，防止主键冲突；换房不改变老人，以原记录为准
+        checkInRecord.setId(null);
+        checkInRecord.setElderId(record.getElderId());
+        checkInRecord.setStatus(1);
+        if (checkInRecord.getCheckInTime() == null) {
+            checkInRecord.setCheckInTime(new Date());
+        }
+        this.save(checkInRecord);
+        // 5. 同步更新床位状态为入住
+        bedUpdate.setId(bed.getId());
+        bedUpdate.setStatus(BED_STATUS_OCCUPIED);
+        bedMapper.updateById(bedUpdate);
+    }
 }

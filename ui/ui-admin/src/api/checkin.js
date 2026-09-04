@@ -16,6 +16,9 @@ const checkInApi = {
     },
     listAvailableElders() {
         return request.get("/checkin-records/available-elders");
+    },
+    updateRoom(id, checkInRecord){
+        return request.put(`/checkin-records/${id}/update-room`, checkInRecord)
     }
 }
 

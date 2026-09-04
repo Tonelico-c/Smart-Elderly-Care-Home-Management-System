@@ -53,12 +53,6 @@ public class CheckInRecord implements Serializable {
     private Long bedId;
 
     /**
-     * 入住护理等级
-     */
-    @TableField("care_level_id")
-    private Long careLevelId;
-
-    /**
      * 入住时间
      */
     @TableField("check_in_time")

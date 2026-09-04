@@ -3,7 +3,6 @@
   import {ref} from "vue";
   import checkInApi from "@/api/checkin.js";
   import buildingApi from "@/api/building.js";
-  import careLevelApi from "@/api/careLevel.js";
   import {Plus, Search, Refresh} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
 
@@ -29,14 +28,9 @@
 
   // 下拉框数据：楼栋、护理等级
   const buildingList = ref([])
-  const careLevelList = ref([])
   const loadOptions = () => {
     buildingApi.list({page: 1, limit: 1000}).then(result => {
       buildingList.value = result.data.records
-    })
-    // TODO 确认 careLevel 接口的查询参数与返回结构后可再调整
-    careLevelApi.list({page: 1, limit: 1000}).then(result => {
-      careLevelList.value = result.data.records
     })
   }
   loadOptions()
@@ -81,7 +75,6 @@
     checkInRecord.value = {
       elderId: '',
       bedId: '',
-      careLevelId: '',
       checkInTime: ''
     }
     addDialogVisible.value = true
@@ -189,6 +182,58 @@
       }
     })
   }
+
+  // ==================== 换房 ====================
+  const changeRoomDialogVisible = ref(false)
+  // 当前行（弹窗中展示老人姓名、原床位信息）
+  const changeRoomRow = ref(null)
+  // 待提交的换房信息：记录id + 老人id + 新床位id
+  const changeRoomForm = ref({})
+  // 新床位列表筛选与选中项
+  const changeRoomBedQuery = ref({buildingId: ''})
+  const changeRoomBedList = ref([])
+  const selectedNewBed = ref(null)
+
+  const loadChangeRoomBeds = () => {
+    checkInApi.listAvailableBeds(changeRoomBedQuery.value).then(result => {
+      changeRoomBedList.value = result.data
+    })
+  }
+
+  const showChangeRoomDialog = (row) => {
+    changeRoomRow.value = row
+    // 注意：请求体不能带id，带了会被MyBatis-Plus当成主键插入导致主键冲突；记录id只放在URL路径上
+    changeRoomForm.value = {
+      elderId: row.elderId,
+      bedId: ''
+    }
+    changeRoomBedQuery.value = {buildingId: ''}
+    selectedNewBed.value = null
+    changeRoomDialogVisible.value = true
+    loadChangeRoomBeds()
+  }
+
+  // 单选新床位：点击行选中
+  const handleNewBedChange = (row) => {
+    selectedNewBed.value = row
+    changeRoomForm.value.bedId = row?.id
+  }
+
+  const submitChangeRoom = () => {
+    if (!changeRoomForm.value.bedId) {
+      ElMessage.warning('请先选择一个新床位')
+      return
+    }
+    checkInApi.updateRoom(changeRoomRow.value.id, changeRoomForm.value).then(result => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg)
+        changeRoomDialogVisible.value = false
+        loadData()
+      } else {
+        ElMessage.error(result.msg)
+      }
+    })
+  }
 </script>
 
 <template>
@@ -241,7 +286,6 @@
       <el-table-column prop="buildingName" label="楼栋" min-width="100"/>
       <el-table-column prop="roomNo" label="房间号" width="100"/>
       <el-table-column prop="bedNo" label="床位号" width="100"/>
-      <el-table-column prop="careLevelName" label="护理等级" width="100"/>
       <el-table-column prop="checkInTime" label="入住时间" min-width="180"/>
       <el-table-column prop="checkOutTime" label="退住时间" min-width="180"/>
       <el-table-column label="状态" width="100">
@@ -251,9 +295,12 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column align="center" width="120px" fixed="right" label="操作">
+      <el-table-column align="center" width="160px" fixed="right" label="操作">
         <template #default="{ row }">
-          <el-button v-if="row.status === 1" size="small" type="warning" @click="showCheckoutDialog(row)">退住</el-button>
+          <template v-if="row.status === 1">
+            <el-button size="small" type="warning" @click="showCheckoutDialog(row)">退住</el-button>
+            <el-button size="small" type="primary" @click="showChangeRoomDialog(row)">换房</el-button>
+          </template>
           <span v-else>—</span>
         </template>
       </el-table-column>
@@ -328,16 +375,6 @@
               value-format="YYYY-MM-DD HH:mm:ss"
           />
         </el-form-item>
-        <el-form-item label="护理等级">
-          <el-select v-model="checkInRecord.careLevelId" placeholder="请选择护理等级">
-            <el-option
-                v-for="item in careLevelList"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
       </el-form>
     </div>
 
@@ -366,6 +403,38 @@
       <div class="dialog-footer">
         <el-button @click="checkoutDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitCheckout">确认退住</el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--换房弹窗：选择新床位-->
+  <el-dialog v-model="changeRoomDialogVisible" title="换房办理" width="700" :lock-scroll="false" :close-on-click-modal="false">
+    <el-descriptions :column="2" border style="margin-bottom: 16px">
+      <el-descriptions-item label="老人姓名">{{ changeRoomRow?.elderName }}</el-descriptions-item>
+      <el-descriptions-item label="当前床位">{{ changeRoomRow?.buildingName }} {{ changeRoomRow?.roomNo }} - {{ changeRoomRow?.bedNo }}</el-descriptions-item>
+    </el-descriptions>
+    <el-form :inline="true" @submit.prevent>
+      <el-form-item label="楼栋">
+        <el-select v-model="changeRoomBedQuery.buildingId" clearable filterable placeholder="请选择楼栋" style="width: 150px" @change="loadChangeRoomBeds">
+          <el-option
+              v-for="item in buildingList"
+              :key="item.id"
+              :label="item.buildingName"
+              :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <el-table :data="changeRoomBedList" border style="width: 100%" highlight-current-row @current-change="handleNewBedChange">
+      <el-table-column prop="buildingName" label="楼栋" min-width="100"/>
+      <el-table-column prop="roomNo" label="房间号" width="100"/>
+      <el-table-column prop="bedNo" label="床位号" width="100"/>
+      <el-table-column prop="price" label="费用/月" width="120"/>
+    </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="changeRoomDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitChangeRoom">确认换房</el-button>
       </div>
     </template>
   </el-dialog>

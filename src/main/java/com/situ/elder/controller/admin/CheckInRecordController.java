@@ -65,6 +65,8 @@ public class CheckInRecordController {
         return Result.ok("办理入住成功");
     }
 
+    /*
+
     /**
      * 退住
      */
@@ -72,5 +74,14 @@ public class CheckInRecordController {
     public Result checkout(@PathVariable Long id, @RequestBody CheckInRecord checkInRecord) {
         checkInRecordService.checkout(id, checkInRecord.getCheckOutTime());
         return Result.ok("退住成功");
+    }
+
+    /**
+     * 换房：把在住老人调换到新床位
+     */
+    @PutMapping("/{id}/update-room")
+    public Result updateRoom(@PathVariable Long id, @RequestBody CheckInRecord checkInRecord) {
+        checkInRecordService.updateRoom(id, checkInRecord);
+        return Result.ok("换房成功");
     }
 }

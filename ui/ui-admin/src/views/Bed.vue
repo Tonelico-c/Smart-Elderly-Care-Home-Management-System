@@ -230,6 +230,8 @@
       <template v-else>
         <el-table :data="list" border style="width: 100%" show-overflow-tooltip>
           <el-table-column fixed prop="id" label="ID"/>
+          <el-table-column prop="buildingName" label="楼栋名" min-width="120"/>
+          <el-table-column prop="roomNo" label="房间编号" min-width="120"/>
           <el-table-column prop="bedNo" label="床位编号" min-width="120"/>
           <el-table-column label="状态" width="100">
             <template #default="{ row }">

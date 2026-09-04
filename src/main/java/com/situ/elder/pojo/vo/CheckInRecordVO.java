@@ -50,12 +50,6 @@ public class CheckInRecordVO {
      */
     private String bedNo;
 
-    private Long careLevelId;
-
-    /**
-     * 护理等级名称
-     */
-    private String careLevelName;
 
     /**
      * 入住时间
