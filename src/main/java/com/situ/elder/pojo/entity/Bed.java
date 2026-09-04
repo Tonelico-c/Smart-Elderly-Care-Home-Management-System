@@ -39,7 +39,7 @@ public class Bed implements Serializable {
     private String bedNo;
 
     /**
-     * 		0 空闲		1 入住		2 维修		3 停用		
+     * 		0 空闲		1 入住		2 维修		3 停用		4 请假		
      */
     private Integer status;
 

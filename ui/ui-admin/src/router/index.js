@@ -23,6 +23,7 @@ import Permission from "@/views/Permission.vue";
 import Room from "@/views/Room.vue";
 import Bed from "@/views/Bed.vue";
 import CheckIn from "@/views/CheckIn.vue";
+import ElderLeave from "@/views/ElderLeave.vue";
 
 
 
@@ -53,6 +54,7 @@ const router = createRouter({
                 { path: '/room', component: Room },
                 { path: '/bed', component: Bed },
                 { path: '/checkin', component: CheckIn },
+                { path: '/elder-leave', component: ElderLeave },
                 { path: '/role', component: Role },
                 { path: '/permission', component: Permission }
             ]

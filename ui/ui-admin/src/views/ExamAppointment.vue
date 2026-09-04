@@ -176,12 +176,12 @@
   const resultDialogVisible = ref(false)
   const resultItems = ref([])
   const resultAppointment = ref({})
-  // 待体检/体检中可编辑结果，已完成只读展示
+  // 待体检/体检中/已完成均可编辑结果，已取消/已过期只读
   const resultEditable = ref(false)
 
   const showResultDialog = (row) => {
     resultAppointment.value = row
-    resultEditable.value = row.status === 0 || row.status === 1
+    resultEditable.value = row.status === 0 || row.status === 1 || row.status === 2
     resultDialogVisible.value = true
     examAppointmentApi.listItems(row.id).then(result => {
       resultItems.value = (result.data || []).map(item => ({...item, abnormal: item.abnormal ?? 0}))

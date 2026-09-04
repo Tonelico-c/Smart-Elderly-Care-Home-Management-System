@@ -60,9 +60,14 @@
   const statusOptions = [
     {value: 1, label: '入住中'},
     {value: 0, label: '已退住'},
+    {value: 2, label: '请假中'},
   ]
   const statusName = (status) => statusOptions.find(item => item.value === status)?.label
-  const statusTagType = (status) => status === 1 ? 'success' : 'info'
+  const statusTagType = (status) => {
+    if (status === 1) return 'success'
+    if (status === 2) return 'warning'
+    return 'info'
+  }
 
   // ==================== 办理入住（三步向导） ====================
   const addDialogVisible = ref(false)

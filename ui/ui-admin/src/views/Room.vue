@@ -181,12 +181,14 @@
     {value: 1, label: '入住'},
     {value: 2, label: '维修'},
     {value: 3, label: '停用'},
+    {value: 4, label: '请假'},
   ]
   const bedStatusName = (status) => bedStatusOptions.find(item => item.value === status)?.label
   const bedStatusTagType = (status) => {
     if (status === 0) return 'success'
     if (status === 1) return 'danger'
     if (status === 2) return 'warning'
+    if (status === 4) return 'primary'
     return 'info'
   }
 </script>

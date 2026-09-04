@@ -71,7 +71,7 @@ public class CheckInRecord implements Serializable {
     private Date checkOutTime;
 
     /**
-     * 状态（1：入住中，0：已退住）
+     * 状态（1：入住中，0：已退住，2：请假中）
      */
     private Integer status;
 

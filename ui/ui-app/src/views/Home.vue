@@ -64,10 +64,11 @@
     //数值型结果优先展示（适合大数字卡片），文本型兜底补位
     const sorted = [...withResult].sort((a, b) => (b.resultType === 1 ? 1 : 0) - (a.resultType === 1 ? 1 : 0))
     for (const item of sorted) {
-      if (picked.length >= 3) break
+      if (picked.length >= 4) break
       if (!picked.includes(item)) {
         picked.push(item)
       }
+
     }
     //没有可展示的结果时显示占位
     if (!picked.length) {

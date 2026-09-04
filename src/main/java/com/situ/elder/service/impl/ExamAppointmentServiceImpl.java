@@ -321,13 +321,14 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
     /**
      * 保存体检结果（管理后台）
      * <p>
-     * 逐条更新明细的结果数据：按是否异常设置明细状态（1正常 2异常），
-     * 全部更新完成后将预约状态置为已完成（2）。
-     * 已完成的预约不允许重复录入。
+     * 逐条更新明细的结果数据：按是否异常设置明细状态（1正常 2异常）。
+     * 待体检/体检中的预约保存后状态置为已完成（2）；
+     * 已完成的预约再次保存视为修改，直接更新明细数据，状态保持已完成不变。
+     * 已取消/已过期的预约不允许录入结果。
      *
      * @param id       预约 id
      * @param itemList 体检项目明细结果列表
-     * @throws ServiceException 预约不存在或已完成时抛出
+     * @throws ServiceException 预约不存在或已取消/已过期时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -336,8 +337,9 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         if (examAppointment == null) {
             throw new ServiceException("预约不存在");
         }
-        if (examAppointment.getStatus() == 2) {
-            throw new ServiceException("该预约已完成，不能重复录入体检结果");
+        //已取消/已过期的预约不允许录入结果；已完成（2）的预约允许修改
+        if (examAppointment.getStatus() == 3 || examAppointment.getStatus() == 4) {
+            throw new ServiceException("该预约已取消或已过期，不能录入体检结果");
         }
 
         for (ExamAppointmentItem item : itemList) {
@@ -352,11 +354,13 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
             examAppointmentItemService.updateById(update);
         }
 
-        //保存结果后预约状态改为已完成
-        ExamAppointment update = new ExamAppointment();
-        update.setId(id);
-        update.setStatus(2);
-        updateById(update);
+        //待体检/体检中的预约保存结果后状态改为已完成；已完成的预约保持原状态（修改数据）
+        if (examAppointment.getStatus() != 2) {
+            ExamAppointment update = new ExamAppointment();
+            update.setId(id);
+            update.setStatus(2);
+            updateById(update);
+        }
     }
 
     /**
