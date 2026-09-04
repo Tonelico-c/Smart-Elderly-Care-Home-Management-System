@@ -1,6 +1,7 @@
 package com.situ.elder.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.situ.elder.pojo.dto.AppElderLeaveDTO;
 import com.situ.elder.pojo.entity.ElderLeave;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.situ.elder.pojo.query.ElderLeaveQuery;
@@ -72,4 +73,6 @@ public interface IElderLeaveService extends IService<ElderLeave> {
     void checkout(Long id, String actualReturnTime);
 
     List<ElderLeaveVO> listByElderId(Long elderId);
+
+    void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO);
 }

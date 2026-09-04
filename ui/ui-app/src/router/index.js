@@ -13,6 +13,7 @@ import Profile from '@/views/Profile.vue'
 import Chat from '@/views/Chat.vue'
 import ExamReport from '@/views/ExamReport.vue'
 import MyLeave from '@/views/MyLeave.vue'
+import LeaveForm from '@/views/LeaveForm.vue'
 
 //创建路由器
 const router = createRouter({
@@ -25,6 +26,7 @@ const router = createRouter({
                 { path: '/home', component: Home },
                 { path: '/package', component: ExamPackage },
                 { path: '/appointment', component: MyAppointment },
+                { path: '/leave', component: MyLeave },
                 { path: '/profile', component: Profile }
             ]
         },
@@ -33,7 +35,7 @@ const router = createRouter({
         { path: '/appointment-form/:packageId', component: AppointmentForm },
         { path: '/chat', component: Chat },
         { path: '/report/:id', component: ExamReport },
-        { path: '/leave', component: MyLeave }
+        { path: '/leave-form', component: LeaveForm }
     ]
 })
 

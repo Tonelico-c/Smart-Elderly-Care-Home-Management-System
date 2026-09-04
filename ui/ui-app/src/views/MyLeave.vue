@@ -51,7 +51,11 @@
 
 <template>
   <div class="leave-page">
-    <van-nav-bar title="我的请假" left-arrow fixed placeholder @click-left="router.back()"/>
+    <van-nav-bar title="我的请假" fixed placeholder>
+      <template #right>
+        <span class="nav-apply" @click="router.push('/leave-form')">我要请假</span>
+      </template>
+    </van-nav-bar>
 
     <van-loading v-if="loading" class="page-loading" size="24" vertical>加载中...</van-loading>
 
@@ -103,7 +107,11 @@
       </div>
 
       <!--空状态-->
-      <van-empty v-else description="暂无请假记录"/>
+      <van-empty description="暂无请假记录">
+        <van-button round type="primary" size="small" style="width: 120px" @click="router.push('/leave-form')">
+          我要请假
+        </van-button>
+      </van-empty>
     </van-pull-refresh>
   </div>
 </template>
@@ -113,6 +121,11 @@
     min-height: 100vh;
     padding-bottom: 20px;
     background-color: #f5f6f8;
+  }
+
+  .nav-apply {
+    color: #1989fa;
+    font-size: 13px;
   }
 
   .page-loading {

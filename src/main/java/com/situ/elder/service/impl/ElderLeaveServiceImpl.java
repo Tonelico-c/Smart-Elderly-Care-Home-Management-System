@@ -7,6 +7,7 @@ import com.situ.elder.exception.ServiceException;
 import com.situ.elder.mapper.BedMapper;
 import com.situ.elder.mapper.CheckInRecordMapper;
 import com.situ.elder.mapper.ElderMapper;
+import com.situ.elder.pojo.dto.AppElderLeaveDTO;
 import com.situ.elder.pojo.entity.Bed;
 import com.situ.elder.pojo.entity.CheckInRecord;
 import com.situ.elder.pojo.entity.Elder;
@@ -26,6 +27,9 @@ import org.springframework.util.ObjectUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -290,6 +294,27 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
             elderLeaveVO.setApproverName(approverMap.get(elderLeave.getApproverId()));
             return elderLeaveVO;
         }).toList();
+    }
+
+    @Override
+    public void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO) {
+
+        Elder elder = elderMapper.selectById(elderId);
+        if (elder == null) {
+            throw new ServiceException("老人不存在");
+        }
+
+        ElderLeave elderLeave = new ElderLeave();
+        elderLeave.setId(null);
+        elderLeave.setElderId(elderId);
+        elderLeave.setReason(appElderLeaveDTO.getReason());
+        elderLeave.setDestination(appElderLeaveDTO.getDestination());
+        elderLeave.setContactPhone(appElderLeaveDTO.getPhone());
+        elderLeave.setBeginTime(appElderLeaveDTO.getBeginTime());
+        elderLeave.setEndTime(appElderLeaveDTO.getEndTime());
+        elderLeave.setStatus(LEAVE_STATUS_PENDING);
+        save(elderLeave);
+
     }
 
     /**

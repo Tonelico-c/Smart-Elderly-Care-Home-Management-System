@@ -74,7 +74,8 @@
       <van-cell title="个人资料" icon="elder-o" is-link/>
       <van-cell title="健康档案" icon="records" is-link/>
       <van-cell title="我的预约" icon="clock-o" is-link @click="router.push('/appointment')"/>
-      <van-cell title="我的请假" icon="sign-o" is-link @click="router.push('/leave')"/>
+      <van-cell title="我要请假" icon="edit" is-link @click="router.push('/leave-form')"/>
+      <van-cell title="我的请假" icon="notes-o" is-link @click="router.push('/leave')"/>
       <van-cell title="体检报告" icon="notes-o" is-link/>
       <van-cell title="联系客服" icon="service-o" is-link/>
       <van-cell title="关于我们" icon="info-o" is-link/>

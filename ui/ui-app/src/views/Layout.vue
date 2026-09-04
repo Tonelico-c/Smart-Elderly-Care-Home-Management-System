@@ -7,7 +7,7 @@
   const active = ref(0)
 
   //路由和Tabbar序号的对应
-  const tabRoutes = ['/home', '/package', '/appointment', '/profile']
+  const tabRoutes = ['/home', '/package', '/appointment', '/leave', '/profile']
   watch(() => route.path, (path) => {
     const index = tabRoutes.indexOf(path)
     if (index !== -1) {
@@ -27,6 +27,7 @@
       <van-tabbar-item replace to="/home" icon="home-o">首页</van-tabbar-item>
       <van-tabbar-item replace to="/package" icon="shopping-cart-o">体检套餐</van-tabbar-item>
       <van-tabbar-item replace to="/appointment" icon="clock-o">我的预约</van-tabbar-item>
+      <van-tabbar-item replace to="/leave" icon="notes-o">请假</van-tabbar-item>
       <van-tabbar-item replace to="/profile" icon="user-o">我的</van-tabbar-item>
     </van-tabbar>
   </div>
