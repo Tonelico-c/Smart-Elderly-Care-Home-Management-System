@@ -24,6 +24,9 @@ const userApi = {
     login(user) {
         return request.post("/users/login", user)
     },
+    register(user) {
+        return request.post("/users/register", user)
+    },
     userInfo(){
         return request.get("/users/userInfo")
     },

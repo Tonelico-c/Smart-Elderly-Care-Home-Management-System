@@ -158,6 +158,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     /**
+     * 用户注册
+     * <p>
+     * 实现逻辑：
+     * 1. 注册用户默认为正常启用状态；
+     * 2. 复用 add() 完成插入（内部含用户名唯一性校验）；
+     * 3. 插入成功后按角色编码 STAFF 查出"普通员工"角色，为该用户绑定默认角色，
+     *    使其注册后登录即可拥有普通员工的菜单和按钮权限。
+     *    若系统中不存在该角色则跳过绑定并记录警告（用户仍可注册成功，由管理员后续手动分配）。
+     *
+     * @param user 注册的用户信息（name、password 等）
+     */
+    @Override
+    public void register(User user) {
+        //注册用户默认为正常启用状态
+        user.setStatus(1);
+        add(user);
+
+        //绑定默认角色：普通员工（STAFF）
+        Role staffRole = roleMapper.selectOne(new QueryWrapper<Role>().eq("code", "STAFF"));
+        if (staffRole == null) {
+            log.warn("注册用户[{}]成功，但未找到编码为 STAFF 的默认角色，请管理员手动分配角色", user.getName());
+            return;
+        }
+        UserRole userRole = new UserRole();
+        userRole.setUserId(user.getId());
+        userRole.setRoleId(staffRole.getId());
+        userRoleMapper.insert(userRole);
+    }
+
+    /**
      * 查询指定用户的"分配角色"回显数据
      * <p>
      * 实现逻辑：

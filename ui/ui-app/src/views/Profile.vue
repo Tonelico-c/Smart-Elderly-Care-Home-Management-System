@@ -1,6 +1,7 @@
 <script setup>
   import {useRouter} from 'vue-router'
-  import {showConfirmDialog, showToast} from 'vant'
+  import {showConfirmDialog, showSuccessToast, showFailToast, showToast} from 'vant'
+  import elderApi from "@/api/elder.js";
   import {useTokenStore} from '@/store/token.js'
   import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
@@ -35,6 +36,64 @@
       showToast('已退出')
       router.push('/login')
     }).catch(() => {})
+  }
+
+  //修改密码弹窗
+  const showPasswordPopup = ref(false)
+  const passwordFormRef = ref(null)
+  const passwordForm = ref({
+    oldPassword: '',
+    newPassword: '',
+    reNewPassword: ''
+  })
+
+  //校验两次密码是否一致
+  const rePasswordValid = (value) => {
+    if (value !== passwordForm.value.newPassword) {
+      return '两次输入密码不一致'
+    }
+    return true
+  }
+
+  const passwordRules = {
+    oldPassword: [
+      {required: true, message: '请输入原密码'},
+      {validator: v => v.length >= 3 && v.length <= 16, message: '密码长度必须为3~16位'}
+    ],
+    newPassword: [
+      {required: true, message: '请输入新密码'},
+      {validator: v => v.length >= 3 && v.length <= 16, message: '密码长度必须为3~16位'}
+    ],
+    reNewPassword: [
+      {required: true, message: '请再次输入新密码'},
+      {validator: rePasswordValid}
+    ]
+  }
+
+  //打开弹窗时重置表单
+  const openPasswordPopup = () => {
+    passwordForm.value = {oldPassword: '', newPassword: '', reNewPassword: ''}
+    showPasswordPopup.value = true
+  }
+
+  //提交修改密码（校验通过后触发 submit）
+  const resetPassword = () => {
+    elderApi.resetPassword({
+      oldPassword: passwordForm.value.oldPassword,
+      newPassword: passwordForm.value.newPassword
+    }).then(result => {
+      if (result.code === 1) {
+        showSuccessToast(result.msg)
+        showPasswordPopup.value = false
+        //修改成功后需重新登录，清掉本账号缓存数据
+        tokenStore.removeToken()
+        elderInfoStore.removeElderInfo()
+        appointmentStore.reset()
+        router.push('/login')
+      } else {
+        showFailToast(result.msg)
+      }
+    })
   }
 </script>
 
@@ -71,6 +130,7 @@
 
     <!--菜单-->
     <van-cell-group inset class="menu-card">
+      <van-cell title="修改密码" icon="shield-o" is-link @click="openPasswordPopup"/>
       <van-cell title="个人资料" icon="elder-o" is-link/>
       <van-cell title="健康档案" icon="records" is-link/>
       <van-cell title="我的预约" icon="clock-o" is-link @click="router.push('/appointment')"/>
@@ -85,6 +145,25 @@
     <div class="logout-btn">
       <van-button block round type="danger" plain @click="logout">退出登录</van-button>
     </div>
+
+    <!--修改密码弹窗-->
+    <van-popup v-model:show="showPasswordPopup" position="bottom" round :style="{paddingBottom: '20px'}">
+      <div class="popup-title">修改密码</div>
+      <van-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" @submit="resetPassword">
+        <van-cell-group inset>
+          <van-field v-model="passwordForm.oldPassword" type="password" name="oldPassword" label="原密码"
+                     placeholder="请输入原密码" :rules="passwordRules.oldPassword"/>
+          <van-field v-model="passwordForm.newPassword" type="password" name="newPassword" label="新密码"
+                     placeholder="请输入新密码" :rules="passwordRules.newPassword"/>
+          <van-field v-model="passwordForm.reNewPassword" type="password" name="reNewPassword" label="确认新密码"
+                     placeholder="请再次输入新密码" :rules="passwordRules.reNewPassword"/>
+        </van-cell-group>
+        <div class="popup-btn">
+          <van-button round block @click="showPasswordPopup = false">取消</van-button>
+          <van-button round block type="primary" native-type="submit">确认修改</van-button>
+        </div>
+      </van-form>
+    </van-popup>
   </div>
 </template>
 
@@ -156,5 +235,19 @@
 
   .logout-btn {
     margin: 24px 16px 0;
+  }
+
+  .popup-title {
+    padding: 20px 16px 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #323233;
+    text-align: center;
+  }
+
+  .popup-btn {
+    display: flex;
+    gap: 12px;
+    margin: 20px 16px 0;
   }
 </style>

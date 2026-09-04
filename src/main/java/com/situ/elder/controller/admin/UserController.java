@@ -57,6 +57,24 @@ public class UserController {
         String token = JwtUtil.createToken(map);
         return Result.ok("登录成功",token);
     }
+    /**
+     * 用户注册
+     * POST /admin/users/register
+     * 注册用户默认为正常状态并绑定 STAFF（普通员工）角色；
+     * 用户名重复由 userService.register 内部校验并抛出 ServiceException
+     */
+    @PostMapping("/register")
+    public Result register(@RequestBody User user){
+        if(user.getName() == null || user.getName().trim().isEmpty()){
+            return Result.error("用户名不能为空");
+        }
+        if(user.getPassword() == null || user.getPassword().trim().isEmpty()){
+            return Result.error("密码不能为空");
+        }
+        userService.register(user);
+        return Result.ok("注册成功");
+    }
+
     // 导出用户列表到Excel
     @GetMapping("/exportExcel")
     public void exportExcel(HttpServletResponse response) {
@@ -140,6 +158,7 @@ public class UserController {
         return Result.ok("分配角色成功");
     }
 
+    // 修改密码
     @PutMapping("/resetPassword")
     public Result resetPassword(@RequestHeader("Authorization") String token,@RequestBody UserPasswordDTO userPasswordDTO){
         Map<String, Object> map = JwtUtil.parseToken(token);

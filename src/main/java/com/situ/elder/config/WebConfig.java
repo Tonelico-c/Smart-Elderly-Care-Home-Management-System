@@ -21,7 +21,7 @@ public class WebConfig implements WebMvcConfigurer {
         // 拦截所有请求
         registry.addInterceptor(new LoginInterceptor())
                 .addPathPatterns("/**")
-                .excludePathPatterns("/admin/users/login","/app/elders/login");
+                .excludePathPatterns("/admin/users/login","/admin/users/register","/app/elders/login");
     }
 
     //把前台String改成Date类型

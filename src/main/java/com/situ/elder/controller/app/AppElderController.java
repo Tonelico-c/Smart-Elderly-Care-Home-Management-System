@@ -1,6 +1,7 @@
 package com.situ.elder.controller.app;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.situ.elder.pojo.dto.ElderPasswordDTO;
 import com.situ.elder.pojo.entity.Elder;
 import com.situ.elder.pojo.vo.ElderInfoVO;
 import com.situ.elder.service.IElderService;
@@ -46,5 +47,23 @@ public class AppElderController {
 
         Integer id = (Integer) map.get("id");
         return Result.ok(elderService.getElderInfo(id.longValue()));
+    }
+
+    @PostMapping("/resetPassword")
+    public Result resetPassword(@RequestHeader("Authorization") String token,@RequestBody ElderPasswordDTO elderPasswordDTO){
+        Map<String, Object> map = JwtUtil.parseToken(token);
+        Integer id = (Integer) map.get("id");
+        Elder elder = elderService.getById(id);
+        if(elder == null){
+            return Result.error("老人不存在");
+        }
+        if(!elder.getPassword().equals(elderPasswordDTO.getOldPassword())){
+            return Result.error("原密码错误");
+        }
+        Elder newElder = new Elder();
+        newElder.setId(elder.getId());
+        newElder.setPassword(elderPasswordDTO.getNewPassword());
+        elderService.updateById(newElder);
+        return Result.ok("密码修改成功");
     }
 }

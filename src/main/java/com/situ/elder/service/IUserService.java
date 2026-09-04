@@ -28,6 +28,8 @@ public interface IUserService extends IService<User> {
 
     void add(User user);
 
+    void register(User user);
+
     UserRoleVO selectAssignedRole(Long userId);
 
     void assignRole(Long userId, Long[] roleIds);
