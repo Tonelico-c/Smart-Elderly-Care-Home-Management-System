@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -299,6 +300,13 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
     @Override
     public void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO) {
 
+        List<ElderLeave> elderLeaveList = elderLeaveMapper.selectList(new LambdaQueryWrapper<ElderLeave>()
+                .eq(ElderLeave::getElderId, elderId)
+                .eq(ElderLeave::getStatus, LEAVE_STATUS_ON_LEAVE).or()
+                .eq(ElderLeave::getStatus, LEAVE_STATUS_PENDING));
+        if (elderLeaveList != null && !elderLeaveList.isEmpty()) {
+            throw new ServiceException("当前有待审批或未销假的请假记录，请等待审批或先销假再提交新的请假记录");
+        }
         Elder elder = elderMapper.selectById(elderId);
         if (elder == null) {
             throw new ServiceException("老人不存在");
@@ -328,7 +336,9 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
     private Map<Long, String> getApproverNameMap(List<Long> approverIds) {
         List<Long> ids = approverIds.stream().filter(java.util.Objects::nonNull).distinct().toList();
         if (ids.isEmpty()) {
-            return Map.of();
+            //注意不能返回Map.of()：不可变Map用null作key调用get会直接抛NPE
+            //（未审批的请假记录approverId为null，调用方仍会拿null来查）
+            return new HashMap<>();
         }
         return userService.listByIds(ids).stream()
                 .collect(Collectors.toMap(User::getId, User::getName));

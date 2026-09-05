@@ -249,7 +249,7 @@
           </el-table-column>
           <el-table-column align="center" width="200px" fixed="right" label="操作">
             <template #default="{ row }">
-              <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
+<!--              <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>-->
               <el-button :disabled="row.status !== 1" size="small" type="warning" @click="showCheckoutDialog(row)">退住</el-button>
               <el-button size="small" type="danger" @click="deleteById(row.id)" >删除</el-button>
             </template>
