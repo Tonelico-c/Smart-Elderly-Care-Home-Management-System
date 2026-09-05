@@ -300,10 +300,11 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
     @Override
     public void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO) {
 
+        //注意不能写成 eq(elderId).eq(status,1).or().eq(status,0)：or()在顶层，
+        //生成的SQL是 (elder_id=? AND status=1) OR status=0，会导致别的老人有待审批记录时本老人也无法请假
         List<ElderLeave> elderLeaveList = elderLeaveMapper.selectList(new LambdaQueryWrapper<ElderLeave>()
                 .eq(ElderLeave::getElderId, elderId)
-                .eq(ElderLeave::getStatus, LEAVE_STATUS_ON_LEAVE).or()
-                .eq(ElderLeave::getStatus, LEAVE_STATUS_PENDING));
+                .in(ElderLeave::getStatus, LEAVE_STATUS_ON_LEAVE, LEAVE_STATUS_PENDING));
         if (elderLeaveList != null && !elderLeaveList.isEmpty()) {
             throw new ServiceException("当前有待审批或未销假的请假记录，请等待审批或先销假再提交新的请假记录");
         }
@@ -323,6 +324,23 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
         elderLeave.setStatus(LEAVE_STATUS_PENDING);
         save(elderLeave);
 
+    }
+
+    /**
+     * 取消请假：仅能取消待审批的请假记录
+     * <p>
+     * 删除请假记录，不涉及老人/床位/入住记录的修改。
+     *
+     * @param id 请假记录id
+     * @throws ServiceException 记录不存在或已审批过时抛出
+     */
+    @Override
+    public void cancel(Long id) {
+        ElderLeave elderLeave = getById(id);
+        if(elderLeave == null || elderLeave.getStatus() == null || elderLeave.getStatus() != LEAVE_STATUS_PENDING){
+            throw new ServiceException("该记录不存在或已审批过，不能取消");
+        }
+        elderLeaveMapper.deleteById(id);
     }
 
     /**

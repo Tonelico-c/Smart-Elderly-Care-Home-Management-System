@@ -150,7 +150,7 @@
     return map[status] || 'info'
   }
 
-  // ===== 审批 =====
+  /*// ===== 审批 =====
   const approveDialogVisible = ref(false)
   const currentLeave = ref({})
   const rejectReason = ref('')
@@ -213,7 +213,7 @@
         ElMessage.error(result.msg)
       }
     })
-  }
+  }*/
 
   // 时间格式化
   const formatTime = (time) => {
@@ -296,8 +296,6 @@
       <el-table-column prop="createTime" label="创建时间" width="180px"/>
       <el-table-column align="center" width="260px" fixed="right" label="操作">
         <template #default="{ row }">
-          <el-button v-if="row.status === 0" size="small" type="warning" @click="showApproveDialog(row)" >审批</el-button>
-          <el-button v-if="row.status === 1" size="small" type="success" @click="showCheckoutDialog(row)" >销假</el-button>
           <el-button :disabled="row.status !== 0" size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)"  >删除</el-button>
         </template>

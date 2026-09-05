@@ -29,6 +29,8 @@
       if (result.code !== 1) {
         return
       }
+      //同步最新列表到store，保证首页待体检提示、个人页统计与后端状态一致
+      appointmentStore.setAppointmentList(result.data || [])
       //列表已按预约日期倒序，取最近一个已完成的预约
       latestExam.value = (result.data || []).find(item => item.status === 2) || null
       if (latestExam.value) {

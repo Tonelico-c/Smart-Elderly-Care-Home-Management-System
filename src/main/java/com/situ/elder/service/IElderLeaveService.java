@@ -75,4 +75,6 @@ public interface IElderLeaveService extends IService<ElderLeave> {
     List<ElderLeaveVO> listByElderId(Long elderId);
 
     void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO);
+
+    void cancel(Long id);
 }

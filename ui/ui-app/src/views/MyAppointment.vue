@@ -23,12 +23,8 @@
   }
 
   onMounted(() => {
-    //列表数据变化过（提交/取消预约）或第一次进入时拉取
-    if (appointmentStore.dirty) {
-      loadList()
-    } else {
-      loading.value = false
-    }
+    //每次进入页面都拉取最新数据，保证后端状态变化（如管理端录入体检结果）能同步显示
+    loadList()
   })
 
   //状态筛选Tab：全部/待体检/已完成/已取消

@@ -42,6 +42,7 @@
                COUNT(DISTINCT be.id) - COUNT(DISTINCT cir.id) AS free_bed_count
         FROM room AS r
         LEFT JOIN bed AS be ON r.id = be.room_id
-        LEFT JOIN check_in_record AS cir ON be.id = cir.bed_id AND cir.status = 1
+        LEFT JOIN check_in_record AS cir
+            ON be.id = cir.bed_id AND (cir.status = 1 OR cir.status = 2)
     </select>
 </mapper>
