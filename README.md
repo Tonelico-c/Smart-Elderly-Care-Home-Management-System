@@ -1,8 +1,8 @@
 # 智慧养老院管理系统（elder）
 
-一个养老院后台管理系统，前后端分离架构。后端提供 REST API，前端为基于 Vue 3 + Element Plus 的管理后台。
+面向养老院场景的一仓三端管理系统：**Spring Boot 后端** + **Vue 3 管理后台**（工作人员使用）+ **Vue 3 老人端 App**（老人使用），并基于 Spring AI 接入大模型，提供 AI 健康咨询与体检报告智能解读。
 
-> **项目状态：开发中。** 核心的登录认证与基础 CRUD 已完成，部分业务模块（见下文"待完成功能"）尚未实现。
+覆盖老人档案、住宿（楼栋/房间/床位）、入住办理、护理（等级/项目/计划/任务）、健康体检（项目/套餐/预约/结果）、请假审批等业务闭环。
 
 ## 一、技术栈
 
@@ -11,84 +11,89 @@
 | 技术 | 说明 |
 | ---- | ---- |
 | Spring Boot 3.4.5 | 主体框架，Java 21 |
-| MyBatis-Plus 3.5.5 | ORM，含代码生成器（MPGenerator）、逻辑删除、分页插件 |
-| MySQL 8 | 数据库，库名 `elder` |
-| JWT（java-jwt 4.4.0） | 登录认证，拦截器校验 Token |
-| EasyExcel 3.1.1 | Excel 导入导出 |
-| 阿里云 OSS | 头像等文件上传 |
+| MyBatis-Plus 3.5.5 | ORM：代码生成器（`MPGenerator`）、分页插件、逻辑删除、字段自动填充 |
+| MySQL 8 | 数据库，库名 `elder`，22 张业务表 |
+| JWT（java-jwt 4.4） | 双端登录认证：拦截器统一校验，App 端从 token 解析老人 ID |
+| Spring AI 1.1 + 阿里百炼 | 大模型 `qwen-plus`：系统提示词约束、会话记忆隔离、Function Calling、SSE 流式输出 |
+| Apache POI / EasyExcel | Excel 导入导出 |
+| 阿里云 OSS | 头像等文件上传（AccessKey 从环境变量读取） |
 | Lombok / Logback | 简化实体类 / 日志 |
 
-### 前端（`ui/ui-admin/`）
+### 管理后台（`ui/ui-admin/`，端口 5173）
 
 | 技术 | 说明 |
 | ---- | ---- |
-| Vue 3.5 + Vite 8 | 前端框架与构建工具 |
-| Element Plus 2.14 | UI 组件库（图标全局注册） |
-| Vue Router 5 / Pinia 4 | 路由 / 状态管理（pinia-plugin-persistedstate 持久化） |
-| Axios | HTTP 请求 |
+| Vue 3.5 + Vite | 前端框架与构建工具 |
+| Element Plus 2.14 | UI 组件库 |
+| Vue Router / Pinia | 路由 / 状态管理（持久化插件保存登录态） |
+| Axios | 统一封装：自动携带 token、`Result` 解包、401 拦截跳登录 |
+
+### 老人端 App（`ui/ui-app/`，端口 5174）
+
+| 技术 | 说明 |
+| ---- | ---- |
+| Vue 3.5 + Vite | 前端框架与构建工具 |
+| Vant 4 | 移动端 UI 组件库（适老化交互） |
+| Pinia / Axios | 同上，与管理后台各自独立封装 |
 
 ## 二、功能模块
 
-### 已完成
+### 管理后台（`controller/admin` → `/admin/**`）
 
-**1. 用户管理（`/users`）**
-- 登录认证：校验用户名、密码、账号禁用状态，成功后签发 JWT Token
-- 用户 CRUD：分页 + 多条件查询（姓名、邮箱、创建时间区间）、新增（用户名唯一校验）、修改、删除（单条/批量，逻辑删除）
-- 当前用户信息查询（Token 解析）、修改密码（校验原密码）
-- 角色分配：查询用户已分配角色回显、全量覆盖式重新分配
-- Excel 导出（全部用户）、Excel 导入（EasyExcel 监听器逐行入库）
+- **权限体系**：用户 / 角色 / 权限管理，角色分配权限（树形结构）；前端按角色动态渲染菜单，按钮级权限控制（`btnPermission`）
+- **老人管理**：老人档案 CRUD、标签分配、联表查询（LEFT JOIN + GROUP_CONCAT 一次带出标签）、Excel 导出
+- **住宿管理**：楼栋 → 房间 → 床位三级管理，房间详情查看床位入住情况，统计卡片
+- **入住办理**：选择老人分配床位生成入住记录，支持换房（换房间或床位）
+- **护理管理**：护理等级、护理项目、护理计划（计划可包含多个项目）、护理任务派发与执行；护工角色登录后仅可见分配给自己的任务
+- **体检管理**：体检项目、体检套餐（穿梭框分配项目）、体检预约与结果录入（数值/文本双类型，录入完成自动结单）
+- **请假管理**：审批老人的请假申请，实现请/销假流程；审批通过后老人、入住记录、床位状态在同一事务中联动，请假不释放床位
+- **首页工作台**：数据统计展示
+- **通用**：文件上传（OSS）、Excel 导入导出
 
-**2. 老人管理（`/elders`）**
-- 老人 CRUD：分页 + 多条件查询（姓名、电话、创建时间区间）、增、删（单条/批量，逻辑删除）、改、查
-- 标签分配：查询老人已分配标签回显、全量覆盖式重新分配
-- 列表联表查询：一条 SQL（LEFT JOIN + `GROUP_CONCAT`）同时带出每个老人的标签名串
-- Excel 导出：含状态码翻译为中文备注（禁用/启用/请假/退住中/入住中/已退住）、出生日期格式化为 `yyyy-MM-dd`
+### 老人端 App（`controller/app` → `/app/**`）
 
-**3. 标签管理（`/tags`）**
-- 标签 CRUD：分页查询、增、删、改
+- **登录**：手机号登录，JWT 持久化，可修改密码
+- **体检**：浏览体检套餐、预约体检、查看我的预约与已完成体检报告
+- **AI 智能咨询**：与 AI 健康助手"康养小智"流式对话，AI 可调用工具查询老人信息和最近体检结果
+- **AI 体检分析**：一键让 AI 解读体检报告，并可在对话中继续追问
+- **请假**：提交请假申请（外出/返回时间两步选择）、查看请假记录与审批进度
+- **个人中心**：查看个人信息
 
-**4. 角色管理（`/roles`）**
-- 角色 CRUD：分页 + 多条件查询（角色名、编码、创建时间区间）
-- 查询角色关联的权限（分页）
+### AI 能力（Spring AI）
 
-**5. 权限管理（`/permissions`）**
-- 权限 CRUD：增、删（单条/批量）、改、查
-- 递归构建权限树形结构（供角色分配权限时渲染树形控件）
+- **角色与安全边界**：系统提示词设定 AI 为养老健康助手，不替代医生诊断、紧急情况引导就医
+- **会话记忆隔离**：`PromptChatMemoryAdvisor` 以老人 ID 作为 conversationId，不同用户上下文互不串扰
+- **工具调用（Function Calling）**：`@Tool` 封装 `ElderTools` / `ExamAppointmentTools` / `TimeTools`，模型按需自主调用查询真实数据，避免幻觉
+- **流式输出**：`Flux<String>` + SSE 推送，前端 `fetch` + ReadableStream 手写 SSE 解析、逐字渲染，失败时兜底提示
 
-**6. 通用能力**
-- 统一响应封装（`Result`）与全局异常处理（`GlobalExceptionHandler`）
-- 登录拦截器（`LoginInterceptor`）校验 Token
-- 文件上传（阿里云 OSS，`/upload`）
-- MyBatis-Plus 自动填充（创建时间/更新时间，`MyMetaObjectHandler`）
+## 三、架构说明
 
-### 待完成 / 规划中
+- **分层**：`controller/{admin,app}` → `service/I*Service + impl` → `mapper`（复杂 SQL 写在 `resources/mapper/*.xml`）；POJO 按 `entity / query / vo / dto` 分目录
+- **双端复用**：admin / app 控制器分目录、分路径前缀，共用同一批 service；拦截器按前缀放行各自的登录接口
+- **统一返回**：`Result` 封装（`code: 1=成功 / 0=失败`）；业务异常抛 `ServiceException`，`GlobalExceptionHandler` 统一处理
+- **认证**：JWT 裸 token 放 `Authorization` 头；`LoginInterceptor` 统一校验，未登录返回 401，前端据此跳转登录页
+- **MyBatis-Plus 约定**：逻辑删除字段 `deleted`；`create_time` / `update_time` 由 `MyMetaObjectHandler` 自动填充；分页使用 `IPage`
+- **日期处理**：`WebConfig` 注册 `String → Date` 转换器（支持 `yyyy-MM-dd HH:mm:ss`、`yyyy-MM-dd` 及 ISO 格式）；Jackson 全局日期格式 `yyyy-MM-dd HH:mm:ss`（GMT+8）
+- **前后端联调**：两份 `vite.config.js` 的开发代理将 `/api` 重写转发到 `http://localhost:8080`（如 `/api/admin/elders` → 后端 `/admin/elders`）
 
-- 角色分配权限的保存接口完善与前端页面联调
-- 基于角色/权限的动态菜单与按钮级权限控制（后端权限校验目前仅到登录拦截）
-- 密码加密存储（当前为明文比对，待引入 BCrypt 等哈希方案）
-- 老人业务扩展：床位/寝室管理、健康档案、请假/退住流程等
-- 前端其余页面与后端接口的完整联调
+## 四、快速启动
 
-### 规划中：护理工作管理（未开始）
+### 准备
 
-按老人的护理等级制定护理计划，计划中安排具体的护理服务项目。涉及的表（初步设计）：
+- JDK 21、Node.js、MySQL 8
+- 创建数据库 `elder` 并导入表结构
 
-| 表 | 说明 |
-| ---- | ---- |
-| `care_level` | 护理等级：老人属于什么护理等级（如自理、半护理、全护理） |
-| `care_plan` | 护理计划：这个老人具体怎么护理 |
-| `care_item` | 护理服务项目：可以提供哪些护理服务，如：测量血糖、测量体温、协助吃饭、协助洗澡、协助如厕、协助起床、协助服药、康复训练、心理陪护、房间清洁 |
-| `care_plan_item` | 护理计划明细：这个老人的护理计划具体安排了哪些服务以及执行规则（如频次、时间段等） |
+### 后端（端口 8080）
 
-## 三、快速启动
+1. 修改 `src/main/resources/application.yml` 中的数据库账号密码
+2. 设置环境变量 `DASHSCOPE_API_KEY`（阿里百炼 API Key，AI 功能依赖它）
+3. 启动：
 
-### 后端
+```bash
+./mvnw spring-boot:run        # Windows Git Bash；cmd 下用 mvnw.cmd
+```
 
-1. 创建数据库并导入表结构（库名 `elder`，MySQL 8）
-2. 修改 `src/main/resources/application.yml` 中的数据库账号密码
-3. 启动主类 `com.situ.elder.ElderApplication`
-
-### 前端
+### 管理后台（端口 5173）
 
 ```bash
 cd ui/ui-admin
@@ -96,24 +101,38 @@ npm install
 npm run dev
 ```
 
-## 四、项目结构
+### 老人端 App（端口 5174）
+
+```bash
+cd ui/ui-app
+npm install
+npm run dev
+```
+
+## 五、项目结构
 
 ```
 elder
 ├── src/main/java/com/situ/elder
-│   ├── controller      # REST 接口层（User/Elder/Tag/Role/Permission 等）
-│   ├── service         # 业务接口与实现
-│   ├── mapper          # MyBatis-Plus Mapper
-│   ├── pojo            # entity 实体 / query 查询对象 / vo 视图对象 / dto 传输对象
-│   ├── interceptor     # 登录拦截器
-│   ├── config          # MyBatis-Plus、Jackson、Web 配置
-│   ├── exception       # 业务异常 + 全局异常处理
-│   ├── utils           # JwtUtil / ExcelUtil / AliOSSUtil / Result
-│   └── excelListener   # EasyExcel 导入监听器
+│   ├── controller
+│   │   ├── admin            # 管理后台接口（/admin/**，23 个控制器）
+│   │   └── app              # 老人端 App 接口（/app/**：登录/体检/请假/AI 对话）
+│   ├── service              # 业务接口与实现（两端复用）
+│   ├── mapper               # MyBatis-Plus Mapper
+│   ├── pojo                 # entity 实体 / query 查询对象 / vo 视图对象 / dto 传输对象
+│   ├── tools                # AI 工具（@Tool，供大模型 Function Calling 调用）
+│   ├── config               # Agent / MyBatis-Plus / Jackson / Web 配置
+│   ├── interceptor          # 登录拦截器
+│   ├── exception            # 业务异常 + 全局异常处理
+│   ├── utils                # JwtUtil / ExcelUtil / AliOSSUtil / Result
+│   ├── excelListener        # EasyExcel 导入监听器
+│   └── MPGenerator.java     # MyBatis-Plus 代码生成器（改 dbTables 后运行 main）
 ├── src/main/resources
-│   ├── application.yml # 应用配置
-│   └── mapper          # XML 映射文件
-├── ui/ui-admin         # Vue 3 + Element Plus 前端管理后台
-│   └── src/views       # Login / Index / User / Elder / Tag / Role / Permission / UserInfo
+│   ├── application.yml      # 应用配置
+│   └── mapper               # 联表查询 XML（22 个）
+├── ui/ui-admin              # 管理后台（Vue 3 + Element Plus）
+│   └── src/views            # 21 个页面（登录/工作台/老人/住宿/护理/体检/请假/权限…）
+├── ui/ui-app                # 老人端 App（Vue 3 + Vant 4）
+│   └── src/views            # 12 个页面（登录/体检/请假/AI 咨询/个人中心）
 └── pom.xml
 ```
