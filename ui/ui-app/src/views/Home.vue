@@ -99,7 +99,8 @@
     {name: '体检预约', icon: 'calendar-o', color: '#1989fa', to: '/package'},
     {name: '我的预约', icon: 'clock-o', color: '#07c160', to: '/appointment'},
     {name: '健康档案', icon: 'records', color: '#ff976a', to: '/profile'},
-    {name: '智能咨询', icon: 'chat-o', color: '#ee0a24', to: '/chat'}
+    {name: '智能咨询', icon: 'chat-o', color: '#ee0a24', to: '/chat'},
+    {name: '请假', icon: 'edit', color: '#f0a70a', to: '/leave'}
   ]
 </script>
 

@@ -1,5 +1,5 @@
 <script setup>
-  import {onMounted, ref, computed} from 'vue'
+  import {nextTick, onMounted, ref, computed} from 'vue'
   import {useRoute, useRouter} from 'vue-router'
   import {showToast} from 'vant'
   import appointmentApi from '@/api/appointment.js'
@@ -77,30 +77,114 @@
   //异常项目数量汇总
   const abnormalCount = computed(() => reportItems.value.filter(item => item.abnormal === 1).length)
 
-  //AI健康分析：弹层展示 + 流式接收分析内容
+  //AI健康分析：弹层内以对话形式展示，分析完毕后可继续追问
   const analysisShow = ref(false)
+  //首次分析进行中（追问期间为 false，可正常输入）
   const analysisLoading = ref(false)
-  const analysisText = ref('')
+  //弹层内的消息列表：role为assistant(小智)/user(老人)，分析结果是第一条assistant消息
+  const messages = ref([])
+  const input = ref('')
+  const sending = ref(false)
+  const listRef = ref(null)
 
+  //分析完毕后的常见追问
+  const quickQuestions = [
+    '异常指标平时要注意什么？',
+    '饮食上有什么建议？',
+    '需要去医院复查吗？'
+  ]
+
+  //滚动到消息列表底部
+  const scrollToBottom = () => {
+    nextTick(() => {
+      const el = listRef.value
+      if (el) {
+        el.scrollTop = el.scrollHeight
+      }
+    })
+  }
+
+  //打开弹层：已有分析内容时直接查看，否则开始新的分析
+  const openAnalysis = () => {
+    analysisShow.value = true
+    if (!messages.value.length) {
+      startAnalysis()
+    }
+  }
+
+  //发起AI健康分析，流式内容逐段追加到第一条assistant消息上
   const startAnalysis = () => {
     if (analysisLoading.value) {
       return
     }
-    analysisShow.value = true
     analysisLoading.value = true
-    analysisText.value = ''
+    //注意：必须取数组中的响应式代理对象，直接用原始对象修改不会触发视图更新
+    messages.value = [{role: 'assistant', content: ''}]
+    const reply = messages.value[0]
+    scrollToBottom()
     chatApi.reportAnalysisStream(String(route.params.id), {
       onMessage: chunk => {
-        analysisText.value += chunk
+        reply.content += chunk
+        scrollToBottom()
       },
       onDone: () => {
-        analysisLoading.value = false
+        if (!reply.content) {
+          reply.content = '抱歉，小智暂时无法分析，请稍后再试。'
+        }
+        finishAnalysis()
       },
       onError: () => {
-        analysisLoading.value = false
-        showToast('分析获取失败，请稍后再试')
+        if (!reply.content) {
+          reply.content = '分析获取失败，请稍后再试。'
+        }
+        finishAnalysis()
       }
     })
+  }
+
+  const finishAnalysis = () => {
+    analysisLoading.value = false
+    scrollToBottom()
+  }
+
+  //分析完毕后继续追问：复用普通流式对话，后端会话记忆中已包含本次分析内容
+  const send = (text) => {
+    const message = (text ?? input.value).trim()
+    if (!message || analysisLoading.value || sending.value) {
+      return
+    }
+    input.value = ''
+    messages.value.push({role: 'user', content: message})
+    messages.value.push({role: 'assistant', content: ''})
+    //取数组中的响应式代理对象，流式内容逐段追加到这条消息上
+    const reply = messages.value[messages.value.length - 1]
+    scrollToBottom()
+
+    sending.value = true
+    chatApi.chatStream(message, {
+      onMessage: chunk => {
+        reply.content += chunk
+        scrollToBottom()
+      },
+      onDone: () => {
+        //流异常中断且没有内容时给出兜底提示
+        if (!reply.content) {
+          reply.content = '抱歉，小智暂时无法回复，请稍后再试。'
+        }
+        finishSend()
+      },
+      onError: () => {
+        if (!reply.content) {
+          reply.content = '网络异常，请稍后再试。'
+        }
+        finishSend()
+      }
+    })
+  }
+
+  const finishSend = () => {
+    sending.value = false
+    scrollToBottom()
   }
 </script>
 
@@ -135,7 +219,7 @@
         </div>
         <!--AI健康分析入口-->
         <van-button v-if="reportItems.length" class="analysis-btn" type="primary" size="small" round block plain
-                    icon="chat-o" :loading="analysisLoading" @click="startAnalysis">AI健康分析</van-button>
+                    icon="chat-o" :loading="analysisLoading" @click="openAnalysis">AI健康分析</van-button>
       </div>
 
       <!--项目明细列表-->
@@ -164,18 +248,35 @@
       <van-empty v-else description="暂无体检项目明细" :image-size="80"/>
     </template>
 
-    <!--AI健康分析弹层：流式展示分析内容-->
+    <!--AI健康分析弹层：流式展示分析内容，分析完毕后可继续追问-->
     <van-popup v-model:show="analysisShow" position="bottom" round>
       <div class="analysis-popup">
         <div class="analysis-title">AI 健康分析</div>
-        <div class="analysis-body">
-          <template v-if="analysisText">{{ analysisText }}</template>
-          <van-loading v-else-if="analysisLoading" size="20" vertical>小智正在分析报告...</van-loading>
+        <!--消息列表：第一条为分析结果，其后为追问对话-->
+        <div class="analysis-body" ref="listRef">
+          <div v-for="(msg, index) in messages" :key="index" class="msg-item" :class="msg.role">
+            <div class="msg-bubble">
+              <template v-if="msg.content">{{ msg.content }}</template>
+              <van-loading v-else-if="analysisLoading" size="16">小智正在分析报告...</van-loading>
+              <van-loading v-else-if="sending" size="16">小智正在思考...</van-loading>
+            </div>
+          </div>
+          <!--常见追问（仅分析完毕且尚未提问时展示）-->
+          <div v-if="!analysisLoading && messages.length <= 1" class="quick-box">
+            <div v-for="q in quickQuestions" :key="q" class="quick-item" @click="send(q)">{{ q }}</div>
+          </div>
         </div>
         <div class="analysis-footer">
           <span>内容由AI生成，仅供参考，不构成医疗建议</span>
           <van-button type="primary" size="small" round plain :loading="analysisLoading"
                       @click="startAnalysis">重新分析</van-button>
+        </div>
+        <!--分析完毕后可继续追问-->
+        <div v-if="!analysisLoading" class="analysis-input-bar">
+          <van-field v-model="input" class="analysis-field" placeholder="针对本次分析继续提问"
+                     :disabled="sending" maxlength="200" @keyup.enter="send()"/>
+          <van-button type="primary" round size="small" class="send-btn" :loading="sending"
+                      @click="send()">发送</van-button>
         </div>
       </div>
     </van-popup>
@@ -245,8 +346,8 @@
   .analysis-popup {
     display: flex;
     flex-direction: column;
-    max-height: 70vh;
-    padding: 20px 16px 30px;
+    max-height: 75vh;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
 
     .analysis-title {
       text-align: center;
@@ -256,15 +357,67 @@
       margin-bottom: 12px;
     }
 
+    //消息列表
     .analysis-body {
       flex: 1;
-      min-height: 120px;
+      min-height: 140px;
       overflow-y: auto;
-      font-size: 14px;
-      line-height: 1.8;
-      color: #323233;
-      //保留AI输出中的换行
-      white-space: pre-wrap;
+
+      .msg-item {
+        display: flex;
+        margin-bottom: 10px;
+
+        .msg-bubble {
+          max-width: 86%;
+          padding: 10px 12px;
+          border-radius: 12px;
+          font-size: 14px;
+          line-height: 1.7;
+          word-break: break-all;
+          //保留AI输出中的换行
+          white-space: pre-wrap;
+        }
+
+        //小智：靠左
+        &.assistant {
+          justify-content: flex-start;
+
+          .msg-bubble {
+            background-color: #f5f6f8;
+            color: #323233;
+            border-top-left-radius: 4px;
+          }
+        }
+
+        //老人：靠右
+        &.user {
+          justify-content: flex-end;
+
+          .msg-bubble {
+            background: linear-gradient(135deg, #1989fa 0%, #3f9cf9 100%);
+            color: #fff;
+            border-top-right-radius: 4px;
+          }
+        }
+      }
+    }
+
+    //常见追问
+    .quick-box {
+      .quick-item {
+        display: inline-block;
+        padding: 6px 12px;
+        margin: 0 8px 8px 0;
+        border-radius: 14px;
+        background-color: #fff;
+        border: 1px solid #dcdee0;
+        font-size: 13px;
+        color: #1989fa;
+
+        &:active {
+          background-color: #f2f3f5;
+        }
+      }
     }
 
     .analysis-footer {
@@ -277,6 +430,30 @@
       border-top: 1px solid #f2f3f5;
       font-size: 11px;
       color: #969799;
+    }
+
+    //追问输入栏
+    .analysis-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+
+      .analysis-field {
+        flex: 1;
+        border-radius: 18px;
+        background-color: #f5f6f8;
+        overflow: hidden;
+
+        :deep(.van-field__control) {
+          font-size: 14px;
+        }
+      }
+
+      .send-btn {
+        flex-shrink: 0;
+        padding: 0 18px;
+      }
     }
   }
 
