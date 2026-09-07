@@ -6,6 +6,7 @@
   import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
   import examPackageApi from "@/api/examPackage.js";
+  import appointmentApi from "@/api/appointment.js";
   import {onMounted, ref, computed} from "vue";
   const router = useRouter()
   const tokenStore = useTokenStore();
@@ -30,6 +31,23 @@
 
   //入住信息：有在住记录时展示楼栋/房间/床位，否则提示暂未办理入住
   const hasCheckIn = computed(() => !!elderInfoStore.elder.buildingName)
+
+  //跳转到最新的体检报告（最近一个已完成的体检预约）
+  const goLatestReport = () => {
+    appointmentApi.list().then(result => {
+      if (result.code !== 1) {
+        showToast(result.msg)
+        return
+      }
+      //列表已按预约日期倒序，取最近一个已完成的预约
+      const latest = (result.data || []).find(item => item.status === 2)
+      if (latest) {
+        router.push('/report/' + latest.id)
+      } else {
+        showToast('暂无体检报告')
+      }
+    })
+  }
 
 
   //退出登录
@@ -161,12 +179,12 @@
     <!--菜单-->
     <van-cell-group inset class="menu-card">
       <van-cell title="修改密码" icon="shield-o" is-link @click="openPasswordPopup"/>
-      <van-cell title="个人资料" icon="elder-o" is-link/>
-      <van-cell title="健康档案" icon="records" is-link/>
+      <van-cell title="个人资料" icon="user-o" is-link @click="router.push('/my-profile')"/>
+<!--      <van-cell title="健康档案" icon="records" is-link/>-->
       <van-cell title="我的预约" icon="clock-o" is-link @click="router.push('/appointment')"/>
       <van-cell title="我要请假" icon="edit" is-link @click="router.push('/leave-form')"/>
       <van-cell title="我的请假" icon="notes-o" is-link @click="router.push('/leave')"/>
-      <van-cell title="体检报告" icon="notes-o" is-link/>
+      <van-cell title="体检报告" icon="notes-o" is-link @click="goLatestReport"/>
       <van-cell title="联系客服" icon="service-o" is-link/>
       <van-cell title="关于我们" icon="info-o" is-link/>
     </van-cell-group>

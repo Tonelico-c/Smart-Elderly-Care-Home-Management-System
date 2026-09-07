@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -47,19 +48,25 @@ public class RoomController {
 
     @PutMapping("/{id}")
     public Result update(@RequestBody Room room){
-        roomService.updateById(room);
+        roomService.update(room);
         return Result.ok("修改成功");
     }
 
     @DeleteMapping("/{id}")
     public Result deleteById(@PathVariable Long id){
-        roomService.removeById(id);
+        roomService.deleteById(id);
         return Result.ok("删除成功");
     }
 
     @DeleteMapping
     public Result deleteBatch(@RequestBody Long[] ids){
-        roomService.removeByIds(Arrays.asList(ids));
+        roomService.deleteByIds(Arrays.asList(ids));
         return Result.ok("删除成功");
+    }
+
+    @GetMapping("/building/{id}")
+    public Result<List<RoomVO>> listByBuildingId(@PathVariable Long id){
+        List<RoomVO> roomVOList = roomService.listByBuildingId(id);
+        return Result.ok(roomVOList);
     }
 }

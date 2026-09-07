@@ -1,6 +1,6 @@
 <script setup>
 
-  import {ref} from "vue";
+  import {computed, ref} from "vue";
   import roomApi from "@/api/room.js";
   import buildingApi from "@/api/building.js";
   import bedApi from "@/api/bed.js";
@@ -128,6 +128,11 @@
         }
       })
     }else {
+      // 房型 → 床位数量约束：单人间固定1、双人间固定2、多人间至少3
+      if (!validBedCount()) {
+        ElMessage.error('床位数量与房型不符：单人间只能1个、双人间只能2个、多人间不能低于3个')
+        return
+      }
       roomApi.add(room.value).then(result => {
         if (result.code === 1) {
           ElMessage.success(result.msg)
@@ -138,6 +143,24 @@
         }
       })
     }
+  }
+
+  // 床位数量下限随房型变化：单人间/双人间固定，多人间至少3
+  const bedCountMin = computed(() => {
+    if (room.value.roomType === 3) return 3
+    return 1
+  })
+  // 切换房型时自动校正床位数量
+  const onRoomTypeChange = () => {
+    if (room.value.roomType === 1) room.value.bedCount = 1
+    else if (room.value.roomType === 2) room.value.bedCount = 2
+    else if (room.value.roomType === 3 && (!room.value.bedCount || room.value.bedCount < 3)) room.value.bedCount = 3
+  }
+  const validBedCount = () => {
+    if (room.value.roomType === 1) return room.value.bedCount === 1
+    if (room.value.roomType === 2) return room.value.bedCount === 2
+    if (room.value.roomType === 3) return room.value.bedCount >= 3
+    return false
   }
 
   // 房间类型选项
@@ -175,6 +198,8 @@
     detailDialogVisible.value = true
   }
 
+
+
   // 床位状态选项
   const bedStatusOptions = [
     {value: 0, label: '空闲'},
@@ -191,6 +216,8 @@
     if (status === 4) return 'primary'
     return 'info'
   }
+
+
 </script>
 
 <template>
@@ -309,7 +336,7 @@
         />
       </el-form-item>
       <el-form-item label="房间类型" :label-width="80">
-        <el-select v-model="room.roomType">
+        <el-select v-model="room.roomType" @change="onRoomTypeChange">
           <el-option
               v-for="item in roomTypeOptions"
               :key="item.value"
@@ -321,9 +348,13 @@
       <el-form-item label="床位数量" :label-width="80">
         <el-input-number
             v-model="room.bedCount"
-            :min="1"
+            :min="bedCountMin"
+            :disabled="room.roomType === 1 || room.roomType === 2"
             controls-position="right"
         />
+        <div v-if="room.roomType === 1 || room.roomType === 2" class="status-tip">
+          {{ roomTypeName(room.roomType) }}床位数量固定为 {{ room.bedCount }} 个
+        </div>
       </el-form-item>
       <el-form-item label="房间状态" :label-width="80">
         <el-select v-model="room.status" placeholder="请选择房间状态">

@@ -18,6 +18,7 @@ import com.situ.elder.pojo.vo.BedVO;
 import com.situ.elder.pojo.vo.CheckInRecordVO;
 import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.ICheckInRecordService;
+import com.situ.elder.service.IRoomService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,8 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
     private BedMapper bedMapper;
     @Autowired
     private RoomMapper roomMapper;
+    @Autowired
+    private IRoomService roomService;
 
     /**
      * 分页查询入住记录列表
@@ -101,7 +104,7 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
     @Override
     public List<ElderVo> listAvailableElder() {
         LambdaQueryWrapper<Elder> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(Elder::getStatus, Arrays.asList(1, 2, 5));
+        lambdaQueryWrapper.in(Elder::getStatus, Arrays.asList(1, 5));
         List<Elder> elders = elderMapper.selectList(lambdaQueryWrapper);
         return elders.stream().map(elder -> {
             ElderVo elderVo = new ElderVo();
@@ -121,7 +124,8 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
      *     <li>根据床位反查房间，补全记录上的房间 id 和楼栋 id；</li>
      *     <li>保存入住记录（状态置为在住，入住时间为空则默认当前时间）；</li>
      *     <li>将床位状态同步更新为"入住"；</li>
-     *     <li>将老人状态同步更新为"入住中"。</li>
+     *     <li>将老人状态同步更新为"入住中"；</li>
+     *     <li>根据占用床位数刷新房间状态。</li>
      * </ol>
      *
      * @param checkInRecord 前端提交的入住记录（须包含老人 id 和床位 id）
@@ -173,6 +177,8 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
         elderUpdate.setId(checkInRecord.getElderId());
         elderUpdate.setStatus(ELDER_STATUS_CHECKED_IN);
         elderMapper.updateById(elderUpdate);
+        // 7. 同步刷新房间状态（占用床位+1，可能变为部分入住/已满）
+        roomService.refreshRoomStatus(bed.getRoomId());
     }
 
     /**
@@ -212,6 +218,8 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
         elderUpdate.setId(record.getElderId());
         elderUpdate.setStatus(ELDER_STATUS_CHECKED_OUT);
         elderMapper.updateById(elderUpdate);
+        // 5. 同步刷新房间状态（释放一张床位，可能变为部分入住/空闲）
+        roomService.refreshRoomStatus(record.getRoomId());
     }
 
 
@@ -219,6 +227,9 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
     @Transactional(rollbackFor = Exception.class)
     public void updateRoom(Long id,CheckInRecord checkInRecord) {
         Bed bed = bedMapper.selectById(checkInRecord.getBedId());
+        if (bed == null) {
+            throw new ServiceException("床位不存在");
+        }
         // 1. 校验记录存在且入住中
         CheckInRecord record = checkInRecordMapper.selectById(id);
         if (record == null || record.getStatus() == null || record.getStatus() != 1) {
@@ -251,5 +262,8 @@ public class CheckInRecordServiceImpl extends ServiceImpl<CheckInRecordMapper, C
         bedUpdate.setId(bed.getId());
         bedUpdate.setStatus(BED_STATUS_OCCUPIED);
         bedMapper.updateById(bedUpdate);
+        // 6. 同步刷新两个房间的状态：旧房间释放床位、新房间占用床位
+        roomService.refreshRoomStatus(record.getRoomId());
+        roomService.refreshRoomStatus(bed.getRoomId());
     }
 }

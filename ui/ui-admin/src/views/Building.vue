@@ -213,6 +213,38 @@
     {value: 3, label: '多人间'},
   ]
   const roomTypeName = (roomType) => roomTypeOptions.find(item => item.value === roomType)?.label
+
+  // 房间状态选项（与房间管理一致：0空闲 1部分入住 2已满 3维修）
+  const roomStatusOptions = [
+    {value: 0, label: '空闲'},
+    {value: 1, label: '部分入住'},
+    {value: 2, label: '已满'},
+    {value: 3, label: '维修'},
+  ]
+  const roomStatusName = (status) => roomStatusOptions.find(item => item.value === status)?.label
+  const roomStatusTagType = (status) => {
+    if (status === 0) return 'success'
+    if (status === 1) return 'warning'
+    if (status === 2) return 'danger'
+    return 'info'
+  }
+
+  // 楼栋详情弹窗：查看该楼栋的房间信息及每个房间入住人数
+  const detailDialogVisible = ref(false)
+  const detailBuilding = ref({})
+  const roomList = ref([])
+  const roomLoading = ref(false)
+
+  const showDetailDialog = (row) => {
+    detailBuilding.value = row
+    detailDialogVisible.value = true
+    roomLoading.value = true
+    roomApi.listByBuildingId(row.id).then(result => {
+      roomList.value = result.data || []
+    }).finally(() => {
+      roomLoading.value = false
+    })
+  }
 </script>
 
 <template>
@@ -286,8 +318,9 @@
       </el-table-column>
       <el-table-column prop="description" label="描述" min-width="150"/>
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
-      <el-table-column align="center" width="200px" fixed="right" label="操作">
+      <el-table-column align="center" width="260px" fixed="right" label="操作">
         <template #default="{ row }">
+          <el-button size="small" type="success" @click="showDetailDialog(row)" >详情</el-button>
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)" >删除</el-button>
         </template>
@@ -346,6 +379,39 @@
         <el-button type="primary" @click="addOrUpdate">
           确认
         </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--楼栋详情弹窗：房间信息及每个房间入住人数-->
+  <el-dialog v-model="detailDialogVisible" :title="`楼栋详情 - ${detailBuilding.buildingName || ''}`" width="700" :lock-scroll="false" :close-on-click-modal="false">
+    <el-alert
+        :title="`房间总数：${roomList.length}，入住人数合计：${roomList.reduce((sum, r) => sum + (r.residentCount || 0), 0)}`"
+        type="info"
+        :closable="false"
+        style="margin-bottom: 12px"
+    />
+    <el-table :data="roomList" border v-loading="roomLoading" style="width: 100%">
+      <el-table-column prop="roomNo" label="房间号" min-width="90"/>
+      <el-table-column prop="floor" label="楼层" width="80"/>
+      <el-table-column label="房型" width="100">
+        <template #default="{ row }">
+          {{ roomTypeName(row.roomType) || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="bedCount" label="床位数" width="90"/>
+      <el-table-column prop="residentCount" label="入住人数" width="90"/>
+      <el-table-column label="状态" width="100">
+        <template #default="{ row }">
+          <el-tag :type="roomStatusTagType(row.status)">
+            {{ roomStatusName(row.status) || '未知' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
       </div>
     </template>
   </el-dialog>

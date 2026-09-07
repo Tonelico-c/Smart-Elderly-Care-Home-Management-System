@@ -150,6 +150,12 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
         if (ObjectUtils.isEmpty(elderLeave.getElderId())) {
             throw new ServiceException("请选择老人");
         }
+        CheckInRecord checkInRecord = checkInRecordMapper.selectOne(new LambdaQueryWrapper<CheckInRecord>()
+                .eq(CheckInRecord::getElderId, elderLeave.getElderId())
+                .eq(CheckInRecord::getStatus, CHECKIN_STATUS_ON_LEAVE));
+        if (checkInRecord != null) {
+            throw new ServiceException("老人请假中，请勿重复请假");
+        }
         Elder elder = elderMapper.selectById(elderLeave.getElderId());
         if (elder == null) {
             throw new ServiceException("老人不存在");
@@ -297,19 +303,11 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
         }).toList();
     }
 
-    /**
-     * 添加请假记录（App端）
-     * <p>
-     * 只有状态为"入住中"（4）的老人才允许请假；
-     * 新记录状态强制置为待审批（0），由审批流程后续流转。
-     *
-     * @param elderId          老人 id
-     * @param appElderLeaveDTO 请假记录（须包含老人 id）
-     * @throws ServiceException 老人不存在或状态不是入住中时抛出
-     */
     @Override
     public void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO) {
 
+        //注意不能写成 eq(elderId).eq(status,1).or().eq(status,0)：or()在顶层，
+        //生成的SQL是 (elder_id=? AND status=1) OR status=0，会导致别的老人有待审批记录时本老人也无法请假
         List<ElderLeave> elderLeaveList = elderLeaveMapper.selectList(new LambdaQueryWrapper<ElderLeave>()
                 .eq(ElderLeave::getElderId, elderId)
                 .in(ElderLeave::getStatus, LEAVE_STATUS_ON_LEAVE, LEAVE_STATUS_PENDING));
@@ -362,6 +360,8 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
     private Map<Long, String> getApproverNameMap(List<Long> approverIds) {
         List<Long> ids = approverIds.stream().filter(java.util.Objects::nonNull).distinct().toList();
         if (ids.isEmpty()) {
+            //注意不能返回Map.of()：不可变Map用null作key调用get会直接抛NPE
+            //（未审批的请假记录approverId为null，调用方仍会拿null来查）
             return new HashMap<>();
         }
         return userService.listByIds(ids).stream()
