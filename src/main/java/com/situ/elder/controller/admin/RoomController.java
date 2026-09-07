@@ -41,7 +41,7 @@ public class RoomController {
 
     @PostMapping
     public Result<Room> add(@RequestBody Room room){
-        roomService.save(room);
+        roomService.addRoom(room);
         return Result.ok("添加成功");
     }
 

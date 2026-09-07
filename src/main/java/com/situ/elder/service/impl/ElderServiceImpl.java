@@ -4,12 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.situ.elder.exception.ServiceException;
-import com.situ.elder.mapper.ElderTagMapper;
-import com.situ.elder.mapper.TagMapper;
-import com.situ.elder.pojo.entity.Elder;
-import com.situ.elder.mapper.ElderMapper;
-import com.situ.elder.pojo.entity.ElderTag;
-import com.situ.elder.pojo.entity.Tag;
+import com.situ.elder.mapper.*;
+import com.situ.elder.pojo.entity.*;
 import com.situ.elder.pojo.query.ElderQuery;
 import com.situ.elder.pojo.vo.ElderExcelVO;
 import com.situ.elder.pojo.vo.ElderInfoVO;
@@ -45,6 +41,14 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
     private TagMapper tagMapper;
     @Autowired
     private ElderTagMapper elderTagMapper;
+    @Autowired
+    private CheckInRecordMapper checkInRecordMapper;
+    @Autowired
+    private BuildingMapper buildingMapper;
+    @Autowired
+    private RoomMapper roomMapper;
+    @Autowired
+    private BedMapper bedMapper;
 
     /**
      * 分页 + 多条件查询老人列表
@@ -231,6 +235,17 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
         }
         ElderInfoVO elderInfoVO = new ElderInfoVO();
         BeanUtils.copyProperties(elder, elderInfoVO);
+        CheckInRecord checkInRecord = checkInRecordMapper.selectOne(new LambdaQueryWrapper<CheckInRecord>()
+                .eq(CheckInRecord::getElderId, elderId)
+                .in(CheckInRecord::getStatus, 1,2));
+        if (checkInRecord != null) {
+            Building building = buildingMapper.selectById(checkInRecord.getBuildingId());
+            Room room = roomMapper.selectById(checkInRecord.getRoomId());
+            Bed bed = bedMapper.selectById(checkInRecord.getBedId());
+            elderInfoVO.setBuildingName(building.getBuildingName());
+            elderInfoVO.setRoomNo(room.getRoomNo());
+            elderInfoVO.setBedNo(bed.getBedNo());
+        }
         if (elder.getBirthday() != null) {
             elderInfoVO.setBirthday(new SimpleDateFormat("yyyy-MM-dd").format(elder.getBirthday()));
             elderInfoVO.setAge(calcAge(elder.getBirthday()));

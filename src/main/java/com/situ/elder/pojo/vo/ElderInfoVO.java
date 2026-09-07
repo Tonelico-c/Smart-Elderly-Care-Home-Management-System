@@ -43,4 +43,19 @@ public class ElderInfoVO {
      * 出生日期（yyyy-MM-dd）
      */
     private String birthday;
+
+    /**
+     * 楼栋名称
+     */
+    private String buildingName;
+
+    /**
+     * 房间号
+     */
+    private String roomNo;
+
+    /**
+     * 床位号
+     */
+    private String bedNo;
 }

@@ -1,7 +1,8 @@
 <script setup>
 
-  import {ref} from "vue";
+  import {ref, computed} from "vue";
   import buildingApi from "@/api/building.js";
+  import roomApi from "@/api/room.js";
   import {Delete, Plus, Search, Refresh} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
 
@@ -79,7 +80,7 @@
       })
     })
   }
-  let ids = []
+  /*let ids = []
   const handleSelectionChange = (rows) => {
     ids = rows.map(row => row.id)
     console.log(ids)
@@ -103,7 +104,7 @@
         }
       })
     })
-  }
+  }*/
 
   // 添加、修改
   const building = ref({})
@@ -114,10 +115,12 @@
     title.value = '添加'
     dialogFormVisible.value = true
     building.value = {status: 1}
+    roomDialogBuildingId.value = null
   }
   const showUpdateDialog = (id) => {
     title.value = '修改'
     dialogFormVisible.value = true
+    roomDialogBuildingId.value = id
     buildingApi.selectById(id).then(result => {
       building.value = result.data || {}
     })
@@ -151,6 +154,65 @@
     {value: 0, label: '停用'},
     {value: 1, label: '启用'},
   ]
+
+  // 编辑弹窗内为当前楼栋添加房间（复用房间管理的添加接口）
+  const room = ref({})
+  const roomDialogVisible = ref(false)
+  const roomDialogBuildingId = ref(null)
+  // 下拉框数据：楼栋（可切换，默认当前楼栋）
+  const buildingOptions = ref([])
+  const loadBuildingOptions = () => {
+    buildingApi.list({page: 1, limit: 1000}).then(result => {
+      buildingOptions.value = result.data.records
+    })
+  }
+  const showAddRoomDialog = () => {
+    room.value = {buildingId: roomDialogBuildingId.value, status: 0}
+    loadBuildingOptions()
+    roomDialogVisible.value = true
+  }
+  const addRoom = () => {
+    // 房型 → 床位数量约束：单人间固定1、双人间固定2、多人间至少3
+    if (!validBedCount()) {
+      ElMessage.error('床位数量与房型不符：单人间只能1个、双人间只能2个、多人间不能低于3个')
+      return
+    }
+    roomApi.add(room.value).then(result => {
+      if (result.code === 1) {
+        ElMessage.success(result.msg)
+        roomDialogVisible.value = false
+        loadData()
+      } else {
+        ElMessage.error(result.msg)
+      }
+    })
+  }
+
+  // 床位数量下限随房型变化：单人间/双人间固定，多人间至少3
+  const bedCountMin = computed(() => {
+    if (room.value.roomType === 3) return 3
+    return 1
+  })
+  // 切换房型时自动校正床位数量
+  const onRoomTypeChange = () => {
+    if (room.value.roomType === 1) room.value.bedCount = 1
+    else if (room.value.roomType === 2) room.value.bedCount = 2
+    else if (room.value.roomType === 3 && (!room.value.bedCount || room.value.bedCount < 3)) room.value.bedCount = 3
+  }
+  const validBedCount = () => {
+    if (room.value.roomType === 1) return room.value.bedCount === 1
+    if (room.value.roomType === 2) return room.value.bedCount === 2
+    if (room.value.roomType === 3) return room.value.bedCount >= 3
+    return false
+  }
+
+  // 房间类型选项
+  const roomTypeOptions = [
+    {value: 1, label: '单人间'},
+    {value: 2, label: '双人间'},
+    {value: 3, label: '多人间'},
+  ]
+  const roomTypeName = (roomType) => roomTypeOptions.find(item => item.value === roomType)?.label
 </script>
 
 <template>
@@ -204,7 +266,7 @@
     </template>
     <div class="toolbar">
       <el-button type="primary" :icon="Plus" @click="showAddDialog" >添加</el-button>
-      <el-button type="danger" :icon="Delete" @click="deleteAll" >批量删除</el-button>
+<!--      <el-button type="danger" :icon="Delete" @click="deleteAll" >批量删除</el-button>-->
     </div>
     <el-table :data="list" border style="width: 100%" ref="multipleTableRef" show-overflow-tooltip @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
@@ -246,6 +308,10 @@
 
   <!--添加、编辑弹出框-->
   <el-dialog v-model="dialogFormVisible" :title="title" width="500" :lock-scroll="false" :close-on-click-modal="false">
+    <!--编辑时可快捷为当前楼栋添加房间-->
+    <div v-if="building.id" class="dialog-toolbar">
+      <el-button type="success" :icon="Plus" @click="showAddRoomDialog">添加房间</el-button>
+    </div>
     <el-form :model="building">
       <el-form-item label="楼栋编号" :label-width="80">
         <el-input v-model="building.buildingNo" placeholder="请输入楼栋编号，如：A栋" autocomplete="off" />
@@ -278,6 +344,62 @@
       <div class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button type="primary" @click="addOrUpdate">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--为当前楼栋添加房间弹出框（嵌套弹窗，楼栋默认选中当前楼栋）-->
+  <el-dialog v-model="roomDialogVisible" title="添加房间" width="500" append-to-body :lock-scroll="false" :close-on-click-modal="false">
+    <el-form :model="room">
+      <el-form-item label="房间号" :label-width="80">
+        <el-input v-model="room.roomNo" placeholder="请输入房间号，如：101" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="楼栋" :label-width="80">
+        <el-select v-model="room.buildingId" placeholder="请选择楼栋">
+          <el-option
+              v-for="item in buildingOptions"
+              :key="item.id"
+              :label="item.buildingName"
+              :value="item.id"
+              :disabled="item.id !== roomDialogBuildingId"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="楼层" :label-width="80">
+        <el-input-number
+            v-model="room.floor"
+            :min="1"
+            controls-position="right"
+        />
+      </el-form-item>
+      <el-form-item label="房间类型" :label-width="80">
+        <el-select v-model="room.roomType" @change="onRoomTypeChange">
+          <el-option
+              v-for="item in roomTypeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="床位数量" :label-width="80">
+        <el-input-number
+            v-model="room.bedCount"
+            :min="bedCountMin"
+            :disabled="room.roomType === 1 || room.roomType === 2"
+            controls-position="right"
+        />
+        <div v-if="room.roomType === 1 || room.roomType === 2" class="status-tip">
+          {{ roomTypeName(room.roomType) }}床位数量固定为 {{ room.bedCount }} 个
+        </div>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="roomDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addRoom">
           确认
         </el-button>
       </div>
@@ -335,6 +457,13 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+/* 编辑弹窗内的快捷操作区 */
+.dialog-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
 }
 
 .pagination-wrapper {

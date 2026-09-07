@@ -6,7 +6,7 @@
   import {elderElderInfoStore} from '@/store/elderInfo.js'
   import {useAppointmentStore} from '@/store/appointment.js'
   import examPackageApi from "@/api/examPackage.js";
-  import {onMounted, ref} from "vue";
+  import {onMounted, ref, computed} from "vue";
   const router = useRouter()
   const tokenStore = useTokenStore();
   const elderInfoStore = elderElderInfoStore();
@@ -15,12 +15,21 @@
   //上架的可用套餐数量
   const packageCount = ref(0)
   onMounted(() => {
+    //进入页面时刷新老人信息，保证入住的楼栋/房间/床位与后端一致
+    elderApi.elderInfo().then(result => {
+      if (result.code === 1) {
+        elderInfoStore.setElderInfo(result.data)
+      }
+    })
     examPackageApi.list().then(result => {
       if (result.code === 1) {
         packageCount.value = result.data.length
       }
     })
   })
+
+  //入住信息：有在住记录时展示楼栋/房间/床位，否则提示暂未办理入住
+  const hasCheckIn = computed(() => !!elderInfoStore.elder.buildingName)
 
 
   //退出登录
@@ -128,6 +137,27 @@
       </div>
     </div>
 
+    <!--入住信息-->
+    <div class="checkin-card">
+      <template v-if="hasCheckIn">
+        <div class="checkin-item">
+          <div class="checkin-value">{{ elderInfoStore.elder.buildingName }}</div>
+          <div class="checkin-label">入住楼栋</div>
+        </div>
+        <div class="checkin-item">
+          <div class="checkin-value">{{ elderInfoStore.elder.roomNo }}</div>
+          <div class="checkin-label">房间号</div>
+        </div>
+        <div class="checkin-item">
+          <div class="checkin-value">{{ elderInfoStore.elder.bedNo }}</div>
+          <div class="checkin-label">床位号</div>
+        </div>
+      </template>
+      <template v-else>
+        <div class="checkin-empty">暂未办理入住</div>
+      </template>
+    </div>
+
     <!--菜单-->
     <van-cell-group inset class="menu-card">
       <van-cell title="修改密码" icon="shield-o" is-link @click="openPasswordPopup"/>
@@ -226,6 +256,43 @@
         font-size: 11px;
         color: #969799;
       }
+    }
+  }
+
+  .checkin-card {
+    display: flex;
+    align-items: center;
+    margin: 12px 16px 0;
+    padding: 16px 0;
+    border-radius: 12px;
+    background-color: #fff;
+
+    .checkin-item {
+      flex: 1;
+      min-width: 0; //允许内容收缩，防止长名称撑破布局
+      text-align: center;
+
+      .checkin-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #07c160;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .checkin-label {
+        margin-top: 4px;
+        font-size: 11px;
+        color: #969799;
+      }
+    }
+
+    .checkin-empty {
+      flex: 1;
+      text-align: center;
+      font-size: 14px;
+      color: #969799;
     }
   }
 

@@ -21,4 +21,6 @@ public interface IBuildingService extends IService<Building> {
     IPage<BuildingVO> list(BuildingQuery buildingQuery);
 
     Map<String, Object> stats();
+
+    void deleteById(Long id);
 }

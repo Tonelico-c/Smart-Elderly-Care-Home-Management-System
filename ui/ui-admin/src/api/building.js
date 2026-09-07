@@ -11,9 +11,6 @@ const buildingApi = {
     deleteById(id){
         return request.delete(`/buildings/${id}`)
     },
-    deleteBatch(ids){
-        return request.delete("/buildings",{data: ids} )
-    },
     add(building){
         return request.post("/buildings", building)
     },
