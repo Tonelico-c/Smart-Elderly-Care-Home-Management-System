@@ -54,7 +54,7 @@ public class ElderController {
 
     @PostMapping
     public Result<Elder> add(@RequestBody Elder elder){
-        elderService.save(elder);
+        elderService.add(elder);
         return Result.ok("添加成功");
     }
 

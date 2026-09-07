@@ -29,4 +29,6 @@ public interface IElderService extends IService<Elder> {
     void exportExcel(HttpServletResponse response);
 
     ElderInfoVO getElderInfo(Long elderId);
+
+    void add(Elder elder);
 }

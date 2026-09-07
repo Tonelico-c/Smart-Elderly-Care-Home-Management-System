@@ -19,6 +19,7 @@ import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.situ.elder.utils.ExcelUtil;
+import com.situ.elder.utils.PasswordUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -153,6 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             log.error("添加失败，用户名已存在");
             throw new ServiceException("用户名已存在");
         }
+        user.setPassword(PasswordUtil.hash(user.getPassword()));
         log.info("用户添加成功: {}", user);
         userMapper.insert(user);
     }

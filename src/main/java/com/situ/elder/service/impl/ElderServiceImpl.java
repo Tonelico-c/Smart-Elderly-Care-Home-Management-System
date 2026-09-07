@@ -3,6 +3,7 @@ package com.situ.elder.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.situ.elder.exception.ServiceException;
 import com.situ.elder.mapper.ElderTagMapper;
 import com.situ.elder.mapper.TagMapper;
 import com.situ.elder.pojo.entity.Elder;
@@ -16,6 +17,7 @@ import com.situ.elder.pojo.vo.ElderVo;
 import com.situ.elder.service.IElderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.situ.elder.utils.ExcelUtil;
+import com.situ.elder.utils.PasswordUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -234,6 +236,17 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
             elderInfoVO.setAge(calcAge(elder.getBirthday()));
         }
         return elderInfoVO;
+    }
+
+    @Override
+    public void add(Elder elder) {
+        Elder dbElder = elderMapper.selectOne(new LambdaQueryWrapper<Elder>().eq(Elder::getName, elder.getName()));
+        if(dbElder != null){
+            log.error("添加失败，老人已存在");
+            throw new ServiceException("老人已存在");
+        }
+        elder.setPassword(PasswordUtil.hash(elder.getPassword()));
+        elderMapper.insert(elder);
     }
 
     /**

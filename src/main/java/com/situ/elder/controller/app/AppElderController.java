@@ -6,6 +6,7 @@ import com.situ.elder.pojo.entity.Elder;
 import com.situ.elder.pojo.vo.ElderInfoVO;
 import com.situ.elder.service.IElderService;
 import com.situ.elder.utils.JwtUtil;
+import com.situ.elder.utils.PasswordUtil;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,10 @@ public class AppElderController {
         if(dbUser == null){
             return Result.error("用户名不存在");
         }
-        if(!dbUser.getPassword().equals(elder.getPassword())){
+        /*if(!dbUser.getPassword().equals(elder.getPassword())){
+            return Result.error("密码错误");
+        }*/
+        if(!PasswordUtil.matches(elder.getPassword(), dbUser.getPassword())){
             return Result.error("密码错误");
         }
         // 登录成功后，判断用户是否被禁用

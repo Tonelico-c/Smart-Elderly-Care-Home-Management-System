@@ -151,7 +151,7 @@
   // 状态选项
   const statusOptions = [
     {value: 0, label: '禁用'},
-    {value: 1, label: '启用'},
+    {value: 1, label: '正常'},
     {value: 2, label: '请假'},
     {value: 3, label: '退住中'},
     {value: 4, label: '入住中'},

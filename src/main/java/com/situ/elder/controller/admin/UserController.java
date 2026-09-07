@@ -10,6 +10,7 @@ import com.situ.elder.pojo.vo.UserRoleVO;
 import com.situ.elder.service.IPermissionService;
 import com.situ.elder.service.IUserService;
 import com.situ.elder.utils.JwtUtil;
+import com.situ.elder.utils.PasswordUtil;
 import com.situ.elder.utils.Result;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,10 @@ public class UserController {
         if(dbUser == null){
             return Result.error("用户名不存在");
         }
-        if(!dbUser.getPassword().equals(user.getPassword())){
+        /*if(!dbUser.getPassword().equals(user.getPassword())){
+            return Result.error("密码错误");
+        }*/
+        if(PasswordUtil.matches(user.getPassword(), dbUser.getPassword())){
             return Result.error("密码错误");
         }
         // 登录成功后，判断用户是否被禁用
