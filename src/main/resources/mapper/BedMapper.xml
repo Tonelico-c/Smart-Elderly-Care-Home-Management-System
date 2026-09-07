@@ -16,7 +16,7 @@
         <result column="update_time" property="updateTime" />
     </resultMap>
 
-    <!--按房间查询床位：LEFT JOIN 房间表带出房间编号，LEFT JOIN 入住中(1)的入住记录带出入住老人信息-->
+    <!--按房间查询床位：LEFT JOIN 房间表带出房间编号，LEFT JOIN 入住记录带出入住老人信息-->
     <select id="listByRoom" resultMap="BedVOMap">
         SELECT be.*, r.room_no AS room_no, b.building_name AS building_name,
                e.name AS elder_name, e.phone AS elder_phone, e.id_card_no AS elder_id_card_no,
@@ -27,7 +27,7 @@
         LEFT JOIN building AS b
         ON r.building_id = b.id
         LEFT JOIN check_in_record AS cir
-        ON be.id = cir.bed_id AND cir.status = 1
+        ON be.id = cir.bed_id AND (cir.status = 1 OR cir.status = 2)
         LEFT JOIN elder AS e
         ON cir.elder_id = e.id
         WHERE be.room_id = #{roomId}
