@@ -3,6 +3,8 @@ package com.situ.elder.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.google.code.kaptcha.impl.DefaultKaptcha;
+import com.situ.elder.pojo.dto.UserLoginDTO;
 import com.situ.elder.pojo.dto.UserPasswordDTO;
 import com.situ.elder.pojo.entity.User;
 import com.situ.elder.pojo.query.UserQuery;
@@ -13,10 +15,14 @@ import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.PasswordUtil;
 import com.situ.elder.utils.Result;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,9 +42,36 @@ public class UserController {
     private IUserService userService;
     @Autowired
     private IPermissionService permissionService;
+    @Autowired
+    private DefaultKaptcha kaptchaProducer;
+
+    /**
+     * 生成登录验证码图片，验证码文本存入 session 供登录时校验
+     */
+    @GetMapping("/captcha")
+    public void captcha(HttpSession session, HttpServletResponse response) throws IOException {
+        String text = kaptchaProducer.createText();
+        session.setAttribute("captcha", text);
+        BufferedImage image = kaptchaProducer.createImage(text);
+        // 禁止浏览器缓存，保证每次刷新都能拿到新图
+        response.setDateHeader("Expires", 0);
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setContentType("image/jpeg");
+        ImageIO.write(image, "jpg", response.getOutputStream());
+    }
+
+
 
     @PostMapping("/login")
-    public Result<String> login(@RequestBody User user){
+    public Result<String> login(@RequestBody UserLoginDTO user, HttpSession session){
+        // 校验验证码：一次性使用，无论校验结果如何都从 session 中移除
+        String expected = (String) session.getAttribute("captcha");
+        session.removeAttribute("captcha");
+        if (expected == null || user.getCaptcha() == null || !expected.equalsIgnoreCase(user.getCaptcha())) {
+            return Result.error("验证码错误");
+        }
+
         User dbUser = userService.getOne(new QueryWrapper<User>().eq("name",user.getName()));
         if(dbUser == null){
             return Result.error("用户名不存在");

@@ -1,7 +1,8 @@
 <script setup>
 
-  import {ref, computed} from "vue";
+  import {ref, computed, onMounted, onUnmounted, nextTick} from "vue";
   import {useRouter} from "vue-router";
+  import * as echarts from "echarts";
   import dashboardApi from "@/api/dashboard.js";
   import {UserInfoStore} from '@/store/userInfo.js'
   import {
@@ -38,18 +39,19 @@
 
   // 统计卡片
   const statCards = [
-    {label: '入住老人', key: 'elderCount', icon: UserFilled, color: '#0d9488', bg: '#e4f4f2'},
+    {label: '老人总数', key: 'elderCount', icon: UserFilled, color: '#0d9488', bg: '#e4f4f2'},
     {label: '楼栋数量', key: 'buildingCount', icon: OfficeBuilding, color: '#3b82f6', bg: '#e8f1fe'},
     {label: '房间总数', key: 'roomCount', icon: House, color: '#f59e0b', bg: '#fdf3e0'},
     {label: '床位总数', key: 'bedCount', icon: Grid, color: '#8b5cf6', bg: '#f1ecfd'},
-    {label: '入住人数', key: 'occupiedCount', icon: User, color: '#ef4444', bg: '#fdecec'},
-    {label: '空闲床位', key: 'freeBedCount', icon: CircleCheck, color: '#64748b', bg: '#eef2f6'},
+    {label: '入住老人', key: 'occupiedCount', icon: User, color: '#ef4444', bg: '#fdecec'},
+    {label: '用户总数', key: 'userCount', icon: User, color: '#64748b', bg: '#eef2f6'},
   ]
 
   // 待办事项
   const todos = computed(() => [
-    {label: '待执行护理任务', count: stats.value.pendingCareTaskCount || 0, icon: FirstAidKit, color: '#0d9488', path: '/care-task'},
-    {label: '待体检预约', count: stats.value.pendingExamCount || 0, icon: Calendar, color: '#3b82f6', path: '/exam-appointment'},
+    {label: '待执行护理任务', count: stats.value.pendingCareTaskCount || 0, icon: FirstAidKit, color: '#0d9488', bg: '#e4f4f2', path: '/care-task'},
+    {label: '待体检预约', count: stats.value.pendingExamCount || 0, icon: Calendar, color: '#3b82f6', bg: '#e8f1fe', path: '/exam-appointment'},
+    {label: '待审批请假', count: stats.value.pendingLeaveCount || 0, icon: ArrowRight, color: '#3b82f6', bg: '#e8f1fe', path: '/leave-approval'},
   ])
 
   // 快捷入口
@@ -59,7 +61,7 @@
     {label: '护理计划', icon: FirstAidKit, path: '/care-plan', color: '#8b5cf6'},
     {label: '体检套餐', icon: Calendar, path: '/exam-package', color: '#3b82f6'},
     {label: '楼栋管理', icon: OfficeBuilding, path: '/building', color: '#ef4444'},
-    {label: '床位管理', icon: Grid, path: '/bed', color: '#64748b'},
+    {label: '请假记录', icon: Grid, path: '/elder-leave', color: '#64748b'},
   ]
 
   // 入住率
@@ -68,6 +70,56 @@
     const occupied = Number(stats.value.occupiedCount) || 0
     if (!bedCount) return 0
     return Math.round(occupied / bedCount * 100)
+  })
+
+  // 老人年龄分布（ECharts环形饼图）
+  const ageChartRef = ref(null)
+  const hasAgeData = ref(false)
+  let ageChart = null
+
+  const loadAgeDistribution = () => {
+    dashboardApi.ageDistribution().then(result => {
+      //人数为0的年龄段不展示，避免图例出现空项
+      const data = (result.data || []).filter(item => item.value > 0)
+      hasAgeData.value = data.length > 0
+      if (!hasAgeData.value) return
+      //等容器渲染出实际尺寸后再初始化/重置画布，避免在隐藏状态(display:none)下初始化导致图表缩成一点
+      nextTick(() => {
+        if (!ageChart) {
+          ageChart = echarts.init(ageChartRef.value)
+        }
+        ageChart.resize()
+        ageChart.setOption({
+          color: ['#0d9488', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#94a3b8'],
+          tooltip: {trigger: 'item', formatter: '{b}：{c}人（{d}%）'},
+          legend: {bottom: 0, icon: 'circle'},
+          series: [{
+            name: '老人年龄分布',
+            type: 'pie',
+            radius: ['50%', '74%'],
+            center: ['50%', '46%'],
+            avoidLabelOverlap: true,
+            itemStyle: {borderRadius: 6, borderColor: '#fff', borderWidth: 2},
+            label: {formatter: '{b}\n{c}人'},
+            data
+          }]
+        })
+      })
+    })
+  }
+
+  //窗口尺寸变化时图表自适应
+  const onChartResize = () => ageChart?.resize()
+
+  onMounted(() => {
+    loadAgeDistribution()
+    window.addEventListener('resize', onChartResize)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', onChartResize)
+    ageChart?.dispose()
+    ageChart = null
   })
 </script>
 
@@ -95,42 +147,55 @@
       </div>
     </div>
 
-    <div class="section-grid">
-      <!-- 待办事项 -->
-      <el-card class="section-card">
+    <div class="main-grid">
+      <!-- 老人年龄分布 -->
+      <el-card class="section-card chart-card">
         <template #header>
-          <span class="section-title">今日待办</span>
+          <span class="section-title">老人年龄分布</span>
         </template>
-        <div v-for="todo in todos" :key="todo.label" class="todo-item" @click="router.push(todo.path)">
-          <div class="todo-icon" :style="{color: todo.color, backgroundColor: '#f0f4f3'}">
-            <el-icon :size="22"><component :is="todo.icon"/></el-icon>
-          </div>
-          <span class="todo-label">{{ todo.label }}</span>
-          <el-badge :value="todo.count" :type="todo.count > 0 ? 'danger' : 'info'" class="todo-badge"/>
-          <el-icon class="todo-arrow"><ArrowRight/></el-icon>
-        </div>
-        <el-empty v-if="todos.length === 0" description="暂无待办" :image-size="60"/>
+        <div v-show="hasAgeData" ref="ageChartRef" class="age-chart"></div>
+        <el-empty v-if="!hasAgeData" description="暂无老人数据" :image-size="80"/>
       </el-card>
 
-      <!-- 入住概况 -->
-      <el-card class="section-card">
-        <template #header>
-          <span class="section-title">入住概况</span>
-        </template>
-        <div class="occupancy-box">
-          <el-progress type="dashboard" :percentage="occupancyRate" :width="150"
-                       :color="[{color: '#0d9488', percentage: 100}]">
-            <template #default>
-              <div class="occupancy-num">{{ occupancyRate }}%</div>
-              <div class="occupancy-label">入住率</div>
-            </template>
-          </el-progress>
-        </div>
-        <div class="occupancy-row">
-          <span>已入住床位：<b class="occ-text">{{ stats.occupiedCount ?? 0 }}</b></span>
-          <span>空闲床位：<b class="free-text">{{ stats.freeBedCount ?? 0 }}</b></span>
-        </div>
-      </el-card>
+      <!-- 右侧：今日待办 + 入住概况 -->
+      <div class="side-col">
+        <el-card class="section-card todo-card">
+          <template #header>
+            <span class="section-title">今日待办</span>
+          </template>
+          <div v-for="todo in todos" :key="todo.label" class="todo-item" @click="router.push(todo.path)">
+            <div class="todo-icon" :style="{color: todo.color, backgroundColor: todo.bg}">
+              <el-icon :size="22"><component :is="todo.icon"/></el-icon>
+            </div>
+            <span class="todo-label">{{ todo.label }}</span>
+            <el-badge :value="todo.count" :type="todo.count > 0 ? 'danger' : 'info'" class="todo-badge"/>
+            <el-icon class="todo-arrow"><ArrowRight/></el-icon>
+          </div>
+        </el-card>
+
+        <el-card class="section-card">
+          <template #header>
+            <span class="section-title">入住概况</span>
+          </template>
+          <div class="occupancy-compact">
+            <div class="occupancy-top">
+              <span class="occupancy-num">{{ occupancyRate }}%</span>
+              <span class="occupancy-label">当前入住率</span>
+            </div>
+            <el-progress :percentage="occupancyRate" :show-text="false" :stroke-width="10" color="#0d9488"/>
+            <div class="occupancy-row">
+              <div class="occupancy-cell">
+                <div class="occ-text">{{ stats.occupiedCount ?? 0 }}</div>
+                <div class="cell-label">已入住床位</div>
+              </div>
+              <div class="occupancy-cell">
+                <div class="free-text">{{ stats.freeBedCount ?? 0 }}</div>
+                <div class="cell-label">空闲床位</div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </div>
     </div>
 
     <!-- 快捷入口 -->
@@ -157,6 +222,7 @@
 
 /* 欢迎横幅：青色渐变 */
 .welcome-banner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -165,6 +231,30 @@
   color: #fff;
   background: linear-gradient(120deg, #0f766e 0%, #14b8a6 60%, #2dd4bf 100%);
   box-shadow: 0 8px 24px rgba(13, 148, 136, 0.25);
+  overflow: hidden;
+
+  //装饰圆
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &::before {
+    width: 200px;
+    height: 200px;
+    right: 80px;
+    top: -100px;
+  }
+
+  &::after {
+    width: 130px;
+    height: 130px;
+    right: -40px;
+    bottom: -70px;
+  }
 
   .welcome-title {
     font-size: 24px;
@@ -180,6 +270,7 @@
 
   .welcome-icon {
     color: rgba(255, 255, 255, 0.5);
+    z-index: 1;
   }
 }
 
@@ -233,14 +324,26 @@
   }
 }
 
-/* 双栏区块 */
-.section-grid {
+/* 主区域：左侧图表 + 右侧信息栏 */
+.main-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 3fr 2fr;
   gap: 16px;
 
-  @media (max-width: 1000px) {
+  @media (max-width: 1100px) {
     grid-template-columns: 1fr;
+  }
+}
+
+.side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+
+  //待办卡片撑满剩余高度
+  .todo-card {
+    flex: 1;
   }
 }
 
@@ -286,40 +389,66 @@
   }
 }
 
-/* 入住概况 */
-.occupancy-box {
+/* 入住概况（紧凑版） */
+.occupancy-compact {
   display: flex;
-  justify-content: center;
-  padding: 8px 0 16px;
+  flex-direction: column;
+  gap: 14px;
+
+  .occupancy-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
 
   .occupancy-num {
-    font-size: 28px;
+    font-size: 34px;
     font-weight: 700;
     color: #0d9488;
+    line-height: 1;
   }
 
   .occupancy-label {
-    margin-top: 4px;
     font-size: 13px;
     color: #8aa5a1;
   }
+
+  .occupancy-row {
+    display: flex;
+    gap: 12px;
+
+    .occupancy-cell {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background-color: #f6f9f8;
+      text-align: center;
+    }
+
+    .occ-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0d9488;
+    }
+
+    .free-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    .cell-label {
+      margin-top: 2px;
+      font-size: 12px;
+      color: #8aa5a1;
+    }
+  }
 }
 
-.occupancy-row {
-  display: flex;
-  justify-content: space-around;
-  font-size: 13px;
-  color: #5b7470;
-
-  .occ-text {
-    color: #0d9488;
-    font-size: 16px;
-  }
-
-  .free-text {
-    color: #64748b;
-    font-size: 16px;
-  }
+/* 老人年龄分布图表 */
+.age-chart {
+  width: 100%;
+  height: 460px;
 }
 
 /* 快捷入口 */

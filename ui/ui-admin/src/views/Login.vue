@@ -1,6 +1,6 @@
 <script setup>
   import {ref} from "vue";
-  import {User,Lock} from "@element-plus/icons-vue";
+  import {User, Lock, Key} from "@element-plus/icons-vue";
 
   import {useRouter} from 'vue-router'
   const router = useRouter()
@@ -11,9 +11,16 @@
   const tokenStore = useTokenStore();
   const user = ref({
     name: '',
-    password: ''
+    password: '',
+    captcha: ''
   })
-
+  //验证码图片地址，加时间戳参数防止浏览器缓存，点击图片刷新
+  const captchaSrc = ref('')
+  const refreshCaptcha = () => {
+    captchaSrc.value = `/api/admin/users/captcha?t=${Date.now()}`
+    user.value.captcha = ''
+  }
+  refreshCaptcha()
   //表单引用，用于触发表单校验
   const formRef = ref(null)
 
@@ -31,6 +38,8 @@
           router.push({path: '/'})
         } else {
           ElMessage.error(result.msg)
+          //验证码是一次性的，登录失败后刷新图片重新获取
+          refreshCaptcha()
         }
       })
     })
@@ -45,6 +54,10 @@
     password: [
       {required: true, message: '请输入密码', trigger: 'blur'},
       {min: 3, max: 16, message: '密码长度必须为3~16位', trigger: 'blur'}
+    ],
+    captcha: [
+      {required: true, message: '请输入验证码', trigger: 'blur'},
+      {min: 4, max: 4, message: '验证码为4位字符', trigger: 'blur'}
     ]
   })
 
@@ -135,16 +148,16 @@
         <el-input :prefix-icon="User" placeholder="请输入用户名" v-model="user.name"></el-input>
       </el-form-item>
       <el-form-item prop="password">
-        <el-input name="password" :prefix-icon="Lock" type="password" placeholder="请输入密码"
+        <el-input name="password" :prefix-icon="Lock" type="password" placeholder="请输入密码" show-password
                   v-model="user.password"></el-input>
       </el-form-item>
-<!--      <el-form-item class="flex">
-        <div class="flex">
-          <el-checkbox>记住我</el-checkbox>
-          <el-link type="primary" :underline="false">忘记密码？</el-link>
+      <el-form-item prop="captcha">
+        <div class="captcha-row">
+          <el-input :prefix-icon="Key" placeholder="请输入验证码" v-model="user.captcha"
+                    @keyup.enter="login"></el-input>
+          <img class="captcha-img" :src="captchaSrc" alt="验证码" title="点击刷新" @click="refreshCaptcha">
         </div>
-      </el-form-item>-->
-      <!-- 登录按钮 -->
+      </el-form-item>
       <el-form-item>
         <el-button class="button" type="primary" auto-insert-space @click="login">登录</el-button>
       </el-form-item>
@@ -267,5 +280,18 @@
     font-size: 13px;
     vertical-align: baseline;
   }
+}
+/*验证码输入框和图片同一行显示*/
+.captcha-row {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+
+.captcha-img {
+  height: 40px;
+  width: 120px;
+  cursor: pointer;
+  border-radius: 4px;
 }
 </style>
