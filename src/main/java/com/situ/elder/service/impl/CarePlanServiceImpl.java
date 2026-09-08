@@ -3,16 +3,18 @@ package com.situ.elder.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.situ.elder.exception.ServiceException;
 import com.situ.elder.mapper.CareItemMapper;
 import com.situ.elder.mapper.CarePlanItemMapper;
 import com.situ.elder.mapper.CarePlanMapper;
+import com.situ.elder.mapper.CareTaskMapper;
 import com.situ.elder.pojo.entity.CareItem;
 import com.situ.elder.pojo.entity.CarePlan;
 import com.situ.elder.pojo.entity.CarePlanItem;
 import com.situ.elder.pojo.entity.CareTask;
 import com.situ.elder.pojo.query.CarePlanQuery;
 import com.situ.elder.service.ICarePlanService;
-import com.situ.elder.service.ICareTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -50,15 +54,19 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
     private CareItemMapper careItemMapper;
 
     @Autowired
-    private ICareTaskService careTaskService;
+    private CareTaskMapper careTaskMapper;
 
     @Override
     public IPage<CarePlan> list(CarePlanQuery carePlanQuery) {
         IPage<CarePlan> page = new Page<>(carePlanQuery.getPage(), carePlanQuery.getLimit());
         LambdaQueryWrapper<CarePlan> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.like(!ObjectUtils.isEmpty(carePlanQuery.getName()),CarePlan::getName, carePlanQuery.getName())
-                .eq(!ObjectUtils.isEmpty(carePlanQuery.getStatus()),CarePlan::getStatus, carePlanQuery.getStatus())
-                .between(!ObjectUtils.isEmpty(carePlanQuery.getBeginCreateTime()) && !ObjectUtils.isEmpty(carePlanQuery.getEndCreateTime()), CarePlan::getCreateTime, carePlanQuery.getBeginCreateTime(), carePlanQuery.getEndCreateTime())
+        lambdaQueryWrapper
+                .like(!ObjectUtils.isEmpty(carePlanQuery.getName()), CarePlan::getName, carePlanQuery.getName())
+                .eq(!ObjectUtils.isEmpty(carePlanQuery.getStatus()), CarePlan::getStatus, carePlanQuery.getStatus())
+                .between(
+                        !ObjectUtils.isEmpty(carePlanQuery.getBeginCreateTime())
+                                && !ObjectUtils.isEmpty(carePlanQuery.getEndCreateTime()),
+                        CarePlan::getCreateTime, carePlanQuery.getBeginCreateTime(), carePlanQuery.getEndCreateTime())
                 .orderByDesc(CarePlan::getCreateTime);
         return carePlanMapper.selectPage(page, lambdaQueryWrapper);
     }
@@ -66,6 +74,7 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
     @Override
     @Transactional
     public void savePlan(CarePlan carePlan) {
+        validateItemTimes(carePlan);
         carePlanMapper.insert(carePlan);
         saveItems(carePlan);
         generateTasks(carePlan);
@@ -74,6 +83,7 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
     @Override
     @Transactional
     public void updatePlan(CarePlan carePlan) {
+        validateItemTimes(carePlan);
         carePlanMapper.updateById(carePlan);
         // 先删除原有明细，再保存新明细
         LambdaQueryWrapper<CarePlanItem> wrapper = new LambdaQueryWrapper<>();
@@ -105,6 +115,26 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
     }
 
     /**
+     * 校验同一计划内同一护理项目（同执行周期）的每次服务时间不重复
+     */
+    private void validateItemTimes(CarePlan carePlan) {
+        if (CollectionUtils.isEmpty(carePlan.getItems())) {
+            return;
+        }
+        // key = 护理项目ID + 执行周期 + 执行时间，重复说明同一项目同一时间安排了多次
+        Set<String> keys = new HashSet<>();
+        for (CarePlanItem item : carePlan.getItems()) {
+            if (item.getCareItemId() == null || item.getExecuteTime() == null) {
+                continue;
+            }
+            String key = item.getCareItemId() + "-" + item.getExecuteCycle() + "-" + item.getExecuteTime();
+            if (!keys.add(key)) {
+                throw new ServiceException("同一护理项目每次的护理服务时间不能相同");
+            }
+        }
+    }
+
+    /**
      * 根据护理计划明细生成护理任务（care_task），按执行周期在计划起止日期内展开
      */
     private void generateTasks(CarePlan carePlan) {
@@ -119,7 +149,7 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
                 .collect(Collectors.toList());
         Map<Long, String> careItemNameMap = careItemIds.isEmpty() ? Collections.emptyMap()
                 : careItemMapper.selectBatchIds(careItemIds).stream()
-                .collect(Collectors.toMap(CareItem::getId, CareItem::getName, (a, b) -> a));
+                        .collect(Collectors.toMap(CareItem::getId, CareItem::getName, (a, b) -> a));
 
         List<CareTask> tasks = new ArrayList<>();
         for (CarePlanItem item : carePlan.getItems()) {
@@ -127,7 +157,8 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
                 continue;
             }
             int frequency = item.getExecuteFrequency() == null ? 1 : item.getExecuteFrequency();
-            for (Date date : buildExecuteDates(carePlan.getStartDate(), carePlan.getEndDate(), item.getExecuteCycle())) {
+            for (Date date : buildExecuteDates(carePlan.getStartDate(), carePlan.getEndDate(),
+                    item.getExecuteCycle())) {
                 for (int i = 0; i < frequency; i++) {
                     CareTask task = new CareTask();
                     task.setElderId(carePlan.getElderId());
@@ -143,7 +174,8 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
             }
         }
         if (!tasks.isEmpty()) {
-            careTaskService.saveBatch(tasks);
+            // 使用 Db 工具类批量保存，避免注入 ICareTaskService 造成循环依赖
+            Db.saveBatch(tasks);
         }
     }
 
@@ -167,5 +199,28 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
             }
         }
         return dates;
+    }
+
+    // 根据该护理计划生成的护理任务的完成状态，更新护理计划的完成状态
+    @Override
+    public void refreshCarePlanStatus(Long id) {
+        if(id == null){
+            return;
+        }
+        CarePlan carePlan = carePlanMapper.selectById(id);
+        if(carePlan == null){
+            return;
+        }
+        Long taskCount = careTaskMapper.selectCount(new LambdaQueryWrapper<CareTask>()
+                .eq(CareTask::getCarePlanId, id));
+        Long overTaskCount = careTaskMapper.selectCount(new LambdaQueryWrapper<CareTask>()
+                .eq(CareTask::getCarePlanId, id)
+                .eq(CareTask::getStatus, 1));
+        if(Objects.equals(taskCount, overTaskCount)){
+            carePlan.setStatus(0);
+        }else{
+            carePlan.setStatus(1);
+        }
+        carePlanMapper.updateById(carePlan);
     }
 }

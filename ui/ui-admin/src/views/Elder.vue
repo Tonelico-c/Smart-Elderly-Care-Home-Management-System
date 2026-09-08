@@ -327,9 +327,6 @@
       <el-form-item label="名字" :label-width="80">
         <el-input v-model="elder.name" autocomplete="off" />
       </el-form-item>
-      <el-form-item label="密码" :label-width="80">
-        <el-input v-model="elder.password" autocomplete="off" />
-      </el-form-item>
       <el-form-item label="身份证号" :label-width="80">
         <el-input v-model="elder.idCardNo" autocomplete="off" />
       </el-form-item>

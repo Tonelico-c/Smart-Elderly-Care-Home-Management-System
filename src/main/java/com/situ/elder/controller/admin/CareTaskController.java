@@ -50,7 +50,7 @@ public class CareTaskController {
 
     @PutMapping("/{id}")
     public Result update(@RequestBody CareTask careTask){
-        careTaskService.updateById(careTask);
+        careTaskService.update(careTask);
         return Result.ok("修改成功");
     }
 

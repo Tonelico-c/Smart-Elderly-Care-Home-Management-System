@@ -22,4 +22,6 @@ public interface ICarePlanService extends IService<CarePlan> {
     void updatePlan(CarePlan carePlan);
 
     CarePlan getPlanById(Long id);
+
+    void refreshCarePlanStatus(Long id);
 }

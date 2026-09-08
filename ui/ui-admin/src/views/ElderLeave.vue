@@ -297,7 +297,7 @@
       <el-table-column align="center" width="260px" fixed="right" label="操作">
         <template #default="{ row }">
           <el-button :disabled="row.status !== 0" size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteById(row.id)"  >删除</el-button>
+          <el-button size="small" type="danger" @click="deleteById(row.id)" :disabled="row.status === 1" >删除</el-button>
         </template>
       </el-table-column>
     </el-table>

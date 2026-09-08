@@ -130,7 +130,17 @@
 
     <!--老人信息卡片-->
     <div class="elder-card">
-      <div class="avatar">
+      <!--有头像时显示老人头像，否则显示默认图标-->
+      <van-image
+          v-if="elderInfoStore.elder.avatar"
+          round
+          width="56"
+          height="56"
+          fit="cover"
+          class="avatar"
+          :src="elderInfoStore.elder.avatar"
+      />
+      <div v-else class="avatar">
         <van-icon name="user-circle-o" size="56" color="#fff"/>
       </div>
       <div class="elder-info">
@@ -185,7 +195,7 @@
       <van-cell title="我要请假" icon="edit" is-link @click="router.push('/leave-form')"/>
       <van-cell title="我的请假" icon="notes-o" is-link @click="router.push('/leave')"/>
       <van-cell title="体检报告" icon="notes-o" is-link @click="goLatestReport"/>
-      <van-cell title="联系客服" icon="service-o" is-link/>
+      <van-cell title="联系客服" icon="service-o" is-link @click="router.push('/chat')"/>
       <van-cell title="关于我们" icon="info-o" is-link/>
     </van-cell-group>
 
@@ -232,6 +242,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0; //防止头像被内容挤压变形
     }
 
     .elder-info {

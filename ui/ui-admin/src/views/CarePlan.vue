@@ -133,14 +133,29 @@
     title.value = '修改'
     dialogFormVisible.value = true
     carePlanApi.selectById(id).then(result => {
-      carePlan.value = result.data || {}
-      if (!carePlan.value.items) {
-        carePlan.value.items = []
-      }
-      // 数据库 time 类型返回 HH:mm:ss，统一截取为 HH:mm 供时间选择器使用
-      carePlan.value.items.forEach(item => {
-        item.executeTime = item.executeTime ? item.executeTime.slice(0, 5) : ''
+      const plan = result.data || {}
+      const rawItems = plan.items || []
+      // 回显时按"护理项目+执行周期"聚合：同组的多条明细合并为一行多时间
+      // 频次取组内各条executeFrequency之和（拆行保存的数据每条为1，求和即次数；兼容旧数据单条频次>1的情况）
+      const groupMap = new Map()
+      rawItems.forEach(item => {
+        const key = item.careItemId + '-' + item.executeCycle
+        if (!groupMap.has(key)) {
+          groupMap.set(key, {careItemId: item.careItemId, executeCycle: item.executeCycle, executeTimes: [], frequency: 0})
+        }
+        const group = groupMap.get(key)
+        group.executeTimes.push(item.executeTime ? item.executeTime.slice(0, 5) : '')
+        group.frequency += item.executeFrequency || 1
       })
+      plan.items = [...groupMap.values()].map(group => {
+        // 时间升序排列，并把时间数组补齐到频次个（旧数据频次>1但只有1个时间时，多出的留空待补填）
+        const times = group.executeTimes.sort()
+        while (times.length < group.frequency) {
+          times.push('')
+        }
+        return {careItemId: group.careItemId, executeCycle: group.executeCycle, executeTimes: times, executeFrequency: group.frequency}
+      })
+      carePlan.value = plan
     })
   }
 
@@ -151,14 +166,57 @@
     {value: 2, label: '每月'},
   ]
   const addItem = () => {
-    carePlan.value.items.push({careItemId: null, executeTime: '08:00', executeCycle: 0, executeFrequency: 1})
+    carePlan.value.items.push({careItemId: null, executeTimes: ['08:00'], executeCycle: 0, executeFrequency: 1})
   }
   const removeItem = (index) => {
     carePlan.value.items.splice(index, 1)
   }
+  // 频次变化时联动时间个数：增加补空位，减少截断
+  const onFrequencyChange = (row) => {
+    const frequency = row.executeFrequency || 1
+    if (!Array.isArray(row.executeTimes)) {
+      row.executeTimes = []
+    }
+    while (row.executeTimes.length < frequency) {
+      row.executeTimes.push('')
+    }
+    if (row.executeTimes.length > frequency) {
+      row.executeTimes = row.executeTimes.slice(0, frequency)
+    }
+  }
+  // 校验明细并把"一行多时间"拆成多行（每行一个时间、频次1）后提交
+  const buildSubmitItems = () => {
+    const items = []
+    for (const row of carePlan.value.items) {
+      if (!row.careItemId) {
+        ElMessage.error('请选择护理项目')
+        return null
+      }
+      const frequency = row.executeFrequency || 1
+      const times = (row.executeTimes || []).slice(0, frequency)
+      if (times.length < frequency || times.some(time => !time)) {
+        ElMessage.error('请为每次护理服务选择时间')
+        return null
+      }
+      if (new Set(times).size !== times.length) {
+        ElMessage.error('同一护理项目每次的护理服务时间不能相同')
+        return null
+      }
+      for (const time of times) {
+        items.push({careItemId: row.careItemId, executeTime: time, executeCycle: row.executeCycle, executeFrequency: 1})
+      }
+    }
+    return items
+  }
   const addOrUpdate = () => {
+    //先校验并拆行，拆行后的明细每条一个时间、频次为1
+    const items = buildSubmitItems()
+    if (items === null) {
+      return
+    }
+    const submitData = {...carePlan.value, items}
     if(carePlan.value.id){
-      carePlanApi.update(carePlan.value.id,carePlan.value).then(result => {
+      carePlanApi.update(carePlan.value.id,submitData).then(result => {
         if (result.code === 1) {
           ElMessage.success(result.msg)
           dialogFormVisible.value = false
@@ -168,7 +226,7 @@
         }
       })
     }else {
-      carePlanApi.add(carePlan.value).then(result => {
+      carePlanApi.add(submitData).then(result => {
         if (result.code === 1) {
           ElMessage.success(result.msg)
           dialogFormVisible.value = false
@@ -355,15 +413,21 @@
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="护理服务时间" width="130">
+            <el-table-column label="护理服务时间" width="220">
               <template #default="{ row }">
-                <el-time-picker
-                    v-model="row.executeTime"
-                    format="HH:mm"
-                    value-format="HH:mm"
-                    placeholder="选择时间"
-                    style="width: 100%"
-                />
+                <!--频次>1时每次服务都要单独选时间，且不能相同-->
+                <div class="time-list">
+                  <div v-for="n in row.executeFrequency" :key="n" class="time-item">
+                    <span class="time-label">第{{ n }}次</span>
+                    <el-time-picker
+                        v-model="row.executeTimes[n - 1]"
+                        format="HH:mm"
+                        value-format="HH:mm"
+                        placeholder="选择时间"
+                        style="width: 100%"
+                    />
+                  </div>
+                </div>
               </template>
             </el-table-column>
             <el-table-column label="执行周期" width="110">
@@ -385,6 +449,7 @@
                     :min="1"
                     controls-position="right"
                     style="width: 100%"
+                    @change="onFrequencyChange(row)"
                 />
               </template>
             </el-table-column>
@@ -442,6 +507,25 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+
+/*多次服务时间列表：每次一行，左侧标注第几次*/
+.time-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #909399;
 }
 
 </style>

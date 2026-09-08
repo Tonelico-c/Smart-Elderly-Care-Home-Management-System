@@ -16,4 +16,6 @@ import com.situ.elder.pojo.query.CareTaskQuery;
 public interface ICareTaskService extends IService<CareTask> {
 
     IPage<CareTask> list(CareTaskQuery careTaskQuery);
+
+    void update(CareTask careTask);
 }

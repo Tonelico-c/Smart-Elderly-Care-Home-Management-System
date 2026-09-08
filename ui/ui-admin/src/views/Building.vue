@@ -5,6 +5,7 @@
   import roomApi from "@/api/room.js";
   import {Delete, Plus, Search, Refresh} from "@element-plus/icons-vue";
   import {ElMessage, ElMessageBox} from "element-plus";
+  import bedApi from "@/api/bed.js";
 
   const list = ref([])
   const total = ref(0)
@@ -245,6 +246,45 @@
       roomLoading.value = false
     })
   }
+
+  // 床位状态选项（与房间管理一致：0空闲 1入住 2维修 3停用 4请假）
+  const bedStatusOptions = [
+    {value: 0, label: '空闲'},
+    {value: 1, label: '入住'},
+    {value: 2, label: '维修'},
+    {value: 3, label: '停用'},
+    {value: 4, label: '请假'},
+  ]
+  const bedStatusName = (status) => bedStatusOptions.find(item => item.value === status)?.label
+  const bedStatusTagType = (status) => {
+    if (status === 0) return 'success'
+    if (status === 1) return 'danger'
+    if (status === 2) return 'warning'
+    if (status === 4) return 'primary'
+    return 'info'
+  }
+
+  // 房间详情（与房间管理一致：房间信息 + 床位信息）
+  const roomDetailDialogVisible = ref(false)
+  const detailRoom = ref({})
+  const detailBeds = ref([])
+  const showRoomDetailDialog = (row) => {
+    detailRoom.value = row
+    detailBeds.value = []
+    bedApi.listByRoom(row.id).then(result => {
+      detailBeds.value = result.data || []
+    })
+    roomDetailDialogVisible.value = true
+  }
+
+  //房间状态名称（与roomStatusOptions对应，供房间详情弹窗使用）
+  const statusName = (status) => roomStatusOptions.find(item => item.value === status)?.label
+  const statusTagType = (status) => {
+    if (status === 0) return 'success'
+    if (status === 1) return 'warning'
+    if (status === 2) return 'danger'
+    return 'info'
+  }
 </script>
 
 <template>
@@ -320,8 +360,8 @@
       <el-table-column prop="createTime" label="创建时间" width="200px"/>
       <el-table-column align="center" width="260px" fixed="right" label="操作">
         <template #default="{ row }">
-          <el-button size="small" type="success" @click="showDetailDialog(row)" >详情</el-button>
           <el-button size="small" type="primary" @click="showUpdateDialog(row.id)" >编辑</el-button>
+          <el-button size="small" type="success" @click="showDetailDialog(row)" >详情</el-button>
           <el-button size="small" type="danger" @click="deleteById(row.id)" >删除</el-button>
         </template>
       </el-table-column>
@@ -408,6 +448,11 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column align="center" width="100" fixed="right" label="操作">
+        <template #default="{ row }">
+          <el-button size="small" type="success" @click="showRoomDetailDialog(row)" >详情</el-button>
+        </template>
+      </el-table-column>
     </el-table>
     <template #footer>
       <div class="dialog-footer">
@@ -467,6 +512,63 @@
         <el-button @click="roomDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="addRoom">
           确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!--房间详情弹出框（叠在楼栋详情弹窗上，需append-to-body）-->
+  <el-dialog v-model="roomDetailDialogVisible" title="房间详情" width="600" append-to-body :lock-scroll="false" :close-on-click-modal="false">
+
+    <!--房间信息-->
+    <el-descriptions title="房间信息" :column="2" border>
+      <el-descriptions-item label="房间号">{{ detailRoom.roomNo }}</el-descriptions-item>
+      <el-descriptions-item label="楼栋">{{ detailRoom.buildingName }}</el-descriptions-item>
+      <el-descriptions-item label="楼层">{{ detailRoom.floor }}</el-descriptions-item>
+      <el-descriptions-item label="房间类型">{{ roomTypeName(detailRoom.roomType) }}</el-descriptions-item>
+      <el-descriptions-item label="床位数量">{{ detailRoom.bedCount }}</el-descriptions-item>
+      <el-descriptions-item label="已入住人数">{{ detailRoom.residentCount }}</el-descriptions-item>
+      <el-descriptions-item label="房间状态" :span="2">
+        <el-tag :type="statusTagType(detailRoom.status)">
+          {{ statusName(detailRoom.status) }}
+        </el-tag>
+      </el-descriptions-item>
+    </el-descriptions>
+
+    <!--床位信息-->
+    <el-descriptions
+        v-for="bed in detailBeds"
+        :key="bed.id"
+        :title="`床位 ${bed.bedNo}`"
+        :column="2"
+        border
+        style="margin-top: 16px"
+    >
+      <el-descriptions-item label="床位状态">
+        <el-tag :type="bedStatusTagType(bed.status)">
+          {{ bedStatusName(bed.status) }}
+        </el-tag>
+      </el-descriptions-item>
+      <el-descriptions-item label="床位费用/月">{{ bed.price }} 元</el-descriptions-item>
+      <!--有老人入住：显示老人基本信息-->
+      <template v-if="bed.elderName">
+        <el-descriptions-item label="入住老人">{{ bed.elderName }}</el-descriptions-item>
+        <el-descriptions-item label="护理等级">{{ bed.careLevelName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="联系电话">{{ bed.elderPhone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="身份证号">{{ bed.elderIdCardNo || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="入住时间" :span="2">{{ bed.checkInTime }}</el-descriptions-item>
+      </template>
+      <!--无老人入住：显示空闲-->
+      <el-descriptions-item v-else label="入住老人" :span="2">
+        <el-tag type="success">空闲</el-tag>
+      </el-descriptions-item>
+    </el-descriptions>
+    <el-empty v-if="detailBeds.length === 0" description="该房间暂无床位" :image-size="80"/>
+
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="roomDetailDialogVisible = false">
+          关闭
         </el-button>
       </div>
     </template>

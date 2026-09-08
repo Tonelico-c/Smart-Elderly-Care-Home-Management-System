@@ -150,11 +150,11 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
         if (ObjectUtils.isEmpty(elderLeave.getElderId())) {
             throw new ServiceException("请选择老人");
         }
-        CheckInRecord checkInRecord = checkInRecordMapper.selectOne(new LambdaQueryWrapper<CheckInRecord>()
-                .eq(CheckInRecord::getElderId, elderLeave.getElderId())
-                .eq(CheckInRecord::getStatus, CHECKIN_STATUS_ON_LEAVE));
-        if (checkInRecord != null) {
-            throw new ServiceException("老人请假中，请勿重复请假");
+        ElderLeave elderLeaveExist = elderLeaveMapper.selectOne(new LambdaQueryWrapper<ElderLeave>()
+                .eq(ElderLeave::getElderId, elderLeave.getElderId())
+                .in(ElderLeave::getStatus, LEAVE_STATUS_ON_LEAVE,LEAVE_STATUS_PENDING));
+        if (elderLeaveExist != null) {
+            throw new ServiceException("当前老人正在休假中或者有待审批的记录，请勿重复请假");
         }
         Elder elder = elderMapper.selectById(elderLeave.getElderId());
         if (elder == null) {

@@ -1,6 +1,7 @@
 package com.situ.elder.controller.app;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.situ.elder.pojo.dto.ElderInfoUpdateDTO;
 import com.situ.elder.pojo.dto.ElderPasswordDTO;
 import com.situ.elder.pojo.entity.Elder;
 import com.situ.elder.pojo.vo.ElderInfoVO;
@@ -9,6 +10,7 @@ import com.situ.elder.utils.JwtUtil;
 import com.situ.elder.utils.PasswordUtil;
 import com.situ.elder.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,32 +23,34 @@ public class AppElderController {
     private IElderService elderService;
 
     @PostMapping("/login")
-    public Result<String> login(@RequestBody Elder elder){
-        Elder dbUser = elderService.getOne(new QueryWrapper<Elder>().eq("name",elder.getName()));
-        if(dbUser == null){
+    public Result<String> login(@RequestBody Elder elder) {
+        Elder dbUser = elderService.getOne(new QueryWrapper<Elder>().eq("name", elder.getName()));
+        if (dbUser == null) {
             return Result.error("用户名不存在");
         }
-        /*if(!dbUser.getPassword().equals(elder.getPassword())){
-            return Result.error("密码错误");
-        }*/
-        if(!PasswordUtil.matches(elder.getPassword(), dbUser.getPassword())){
+        /*
+         * if(!dbUser.getPassword().equals(elder.getPassword())){
+         * return Result.error("密码错误");
+         * }
+         */
+        if (!PasswordUtil.matches(elder.getPassword(), dbUser.getPassword())) {
             return Result.error("密码错误");
         }
         // 登录成功后，判断用户是否被禁用
-        if(dbUser.getStatus() == 0){
+        if (dbUser.getStatus() == 0) {
             return Result.error("该用户已被禁用");
         }
 
-        //生成token
+        // 生成token
         Map<String, Object> map = new HashMap<>();
         map.put("id", dbUser.getId());
         map.put("name", dbUser.getName());
         String token = JwtUtil.createToken(map);
-        return Result.ok("登录成功",token);
+        return Result.ok("登录成功", token);
     }
 
     @GetMapping("/elderInfo")
-    public Result<ElderInfoVO> elderInfo(@RequestHeader("Authorization") String token){
+    public Result<ElderInfoVO> elderInfo(@RequestHeader("Authorization") String token) {
         Map<String, Object> map = JwtUtil.parseToken(token);
 
         Integer id = (Integer) map.get("id");
@@ -54,14 +58,15 @@ public class AppElderController {
     }
 
     @PostMapping("/resetPassword")
-    public Result resetPassword(@RequestHeader("Authorization") String token,@RequestBody ElderPasswordDTO elderPasswordDTO){
+    public Result resetPassword(@RequestHeader("Authorization") String token,
+            @RequestBody ElderPasswordDTO elderPasswordDTO) {
         Map<String, Object> map = JwtUtil.parseToken(token);
         Integer id = (Integer) map.get("id");
         Elder elder = elderService.getById(id);
-        if(elder == null){
+        if (elder == null) {
             return Result.error("老人不存在");
         }
-        if(!elder.getPassword().equals(elderPasswordDTO.getOldPassword())){
+        if (!elder.getPassword().equals(elderPasswordDTO.getOldPassword())) {
             return Result.error("原密码错误");
         }
         Elder newElder = new Elder();
@@ -69,5 +74,26 @@ public class AppElderController {
         newElder.setPassword(elderPasswordDTO.getNewPassword());
         elderService.updateById(newElder);
         return Result.ok("密码修改成功");
+    }
+
+    /**
+     * 修改基本资料（姓名/头像/联系电话/家庭住址）
+     * 姓名为登录账号，不允许置空；其余字段仅在传值时更新
+     */
+    @PostMapping("/updateInfo")
+    public Result updateInfo(@RequestHeader("Authorization") String token, @RequestBody ElderInfoUpdateDTO dto) {
+        Map<String, Object> map = JwtUtil.parseToken(token);
+        Integer id = (Integer) map.get("id");
+        if (ObjectUtils.isEmpty(dto.getName())) {
+            return Result.error("姓名不能为空");
+        }
+        Elder elder = new Elder();
+        elder.setId(id.longValue());
+        elder.setName(dto.getName());
+        elder.setAvatar(dto.getAvatar());
+        elder.setPhone(dto.getPhone());
+        elder.setAddress(dto.getAddress());
+        elderService.updateById(elder);
+        return Result.ok("修改成功");
     }
 }
