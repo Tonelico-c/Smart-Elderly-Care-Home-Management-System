@@ -31,18 +31,21 @@ public class AppElderLeaveController {
         return Result.ok();
     }
 
-    // 老人销假
+    // 老人销假（带归属校验：只能销自己的假）
     @PostMapping("/{id}/checkout")
-    public Result checkout(@PathVariable Long id,
+    public Result checkout(@RequestHeader("Authorization") String token,
+                           @PathVariable Long id,
                            @RequestParam(value = "actualReturnTime", required = false) String actualReturnTime) {
-        elderLeaveService.checkout(id, actualReturnTime);
+        Long elderId = getElderIdFromToken(token);
+        elderLeaveService.checkout(id, actualReturnTime, elderId);
         return Result.ok("销假成功");
     }
 
-    // 老人取消当前待审批的请假记录
+    // 老人取消当前待审批的请假记录（带归属校验：只能取消自己的记录）
     @DeleteMapping("/{id}/cancel")
-    public Result cancel(@PathVariable Long id){
-        elderLeaveService.cancel(id);
+    public Result cancel(@RequestHeader("Authorization") String token, @PathVariable Long id){
+        Long elderId = getElderIdFromToken(token);
+        elderLeaveService.cancel(id, elderId);
         return Result.ok("取消成功");
     }
 

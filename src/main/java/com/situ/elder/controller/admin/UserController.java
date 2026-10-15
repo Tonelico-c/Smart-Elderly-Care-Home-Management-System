@@ -79,7 +79,8 @@ public class UserController {
         /*if(!dbUser.getPassword().equals(user.getPassword())){
             return Result.error("密码错误");
         }*/
-        if(PasswordUtil.matches(user.getPassword(), dbUser.getPassword())){
+        //注意：matches 返回 true 表示密码正确，这里必须取反，否则会变成"密码正确反而报错、错误密码放行"
+        if(!PasswordUtil.matches(user.getPassword(), dbUser.getPassword())){
             return Result.error("密码错误");
         }
         // 登录成功后，判断用户是否被禁用
@@ -204,12 +205,14 @@ public class UserController {
         if (user == null) {
             return Result.error("用户不存在");
         }
-        if (!user.getPassword().equals(userPasswordDTO.getOldPassword())) {
+        //库里存的是 BCrypt 哈希，不能拿哈希和明文直接 equals（BCrypt 每次加盐结果都不同，永远不相等）
+        if (!PasswordUtil.matches(userPasswordDTO.getOldPassword(), user.getPassword())) {
             return Result.error("原密码错误");
         }
         User newUser =  new User();
         newUser.setId(user.getId());
-        newUser.setPassword(userPasswordDTO.getNewPassword());
+        //新密码必须加密后再入库，否则会把库里的 BCrypt 哈希覆盖成明文
+        newUser.setPassword(PasswordUtil.hash(userPasswordDTO.getNewPassword()));
         userService.updateById(newUser);
         return Result.ok("密码修改成功");
     }

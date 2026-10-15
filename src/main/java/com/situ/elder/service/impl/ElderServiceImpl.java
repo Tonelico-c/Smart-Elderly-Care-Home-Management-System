@@ -231,7 +231,8 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
     public ElderInfoVO getElderInfo(Long elderId) {
         Elder elder = elderMapper.selectById(elderId);
         if (elder == null) {
-            throw new RuntimeException("老人不存在");
+            //抛业务异常，交由全局异常处理器返回友好提示（原来抛 RuntimeException 会被兜底成"系统繁忙"）
+            throw new ServiceException("老人不存在");
         }
         ElderInfoVO elderInfoVO = new ElderInfoVO();
         BeanUtils.copyProperties(elder, elderInfoVO);
@@ -239,12 +240,19 @@ public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements
                 .eq(CheckInRecord::getElderId, elderId)
                 .in(CheckInRecord::getStatus, 1,2));
         if (checkInRecord != null) {
+            //楼栋/房间/床位都可能因为数据被删而查不到，逐个判空，避免这里 NPE 把整个接口打挂
             Building building = buildingMapper.selectById(checkInRecord.getBuildingId());
             Room room = roomMapper.selectById(checkInRecord.getRoomId());
             Bed bed = bedMapper.selectById(checkInRecord.getBedId());
-            elderInfoVO.setBuildingName(building.getBuildingName());
-            elderInfoVO.setRoomNo(room.getRoomNo());
-            elderInfoVO.setBedNo(bed.getBedNo());
+            if (building != null) {
+                elderInfoVO.setBuildingName(building.getBuildingName());
+            }
+            if (room != null) {
+                elderInfoVO.setRoomNo(room.getRoomNo());
+            }
+            if (bed != null) {
+                elderInfoVO.setBedNo(bed.getBedNo());
+            }
         }
         if (elder.getBirthday() != null) {
             elderInfoVO.setBirthday(new SimpleDateFormat("yyyy-MM-dd").format(elder.getBirthday()));

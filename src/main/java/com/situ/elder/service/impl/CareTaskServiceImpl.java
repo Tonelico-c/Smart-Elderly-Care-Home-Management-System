@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.situ.elder.mapper.CareTaskMapper;
 import com.situ.elder.pojo.entity.CareTask;
 import com.situ.elder.pojo.query.CareTaskQuery;
-import com.situ.elder.service.ICarePlanService;
 import com.situ.elder.service.ICareTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +25,6 @@ public class CareTaskServiceImpl extends ServiceImpl<CareTaskMapper, CareTask> i
 
     @Autowired
     private CareTaskMapper careTaskMapper;
-    @Autowired
-    private ICarePlanService carePlanService;
 
     @Override
     public IPage<CareTask> list(CareTaskQuery careTaskQuery) {
@@ -45,11 +42,6 @@ public class CareTaskServiceImpl extends ServiceImpl<CareTaskMapper, CareTask> i
 
     @Override
     public void update(CareTask careTask) {
-        careTask.setStatus(1);
-        if(careTask.getActualExecuteTime() == null){
-            careTask.setActualExecuteTime(new java.util.Date());
-        }
-        careTaskMapper.updateById(careTask);
-        carePlanService.refreshCarePlanStatus(careTask.getCarePlanId());
+
     }
 }

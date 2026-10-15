@@ -72,9 +72,33 @@ public interface IElderLeaveService extends IService<ElderLeave> {
      */
     void checkout(Long id, String actualReturnTime);
 
+    /**
+     * 销假（App 端专用，带归属校验）
+     * <p>
+     * 与管理后台的区别：这里必须校验这条请假记录属于当前登录老人，
+     * 否则老人拿着自己的合法 token、改一下路径上的 id 就能销掉别人的假。
+     *
+     * @param id               请假记录id
+     * @param actualReturnTime 实际返回时间（为空时取当前时间）
+     * @param elderId          当前登录老人id（来自 token，用于归属校验）
+     * @throws ServiceException 记录不存在、状态不是请假中，或不属于该老人时抛出
+     */
+    void checkout(Long id, String actualReturnTime, Long elderId);
+
     List<ElderLeaveVO> listByElderId(Long elderId);
 
     void add(Long elderId, AppElderLeaveDTO appElderLeaveDTO);
 
     void cancel(Long id);
+
+    /**
+     * 取消请假（App 端专用，带归属校验）
+     * <p>
+     * 仅能取消待审批的记录，且必须是当前登录老人自己的记录。
+     *
+     * @param id      请假记录id
+     * @param elderId 当前登录老人id（来自 token，用于归属校验）
+     * @throws ServiceException 记录不存在、已审批过，或不属于该老人时抛出
+     */
+    void cancel(Long id, Long elderId);
 }

@@ -5,6 +5,13 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * 用户导入/导出用的 Excel 行对象。
+ * <p>
+ * 注意：这里**不能**出现 password、deleted 这类字段——
+ * 导出走的是全表查询 + 同名属性拷贝，多一个字段就等于把密码哈希写进了 Excel 文件；
+ * 导入模板也不应该携带密码哈希（没法校验合法性），导入用户的初始密码在监听器里统一设置。
+ */
 @Data
 public class UserExcelVO {
     /**
@@ -18,12 +25,6 @@ public class UserExcelVO {
      */
     @ExcelProperty(value = "用户名")
     private String name;
-
-    /**
-     * 密码哈希
-     */
-    @ExcelProperty(value = "密码哈希")
-    private String password;
 
     /**
      * 手机号
@@ -48,12 +49,6 @@ public class UserExcelVO {
      */
     @ExcelProperty(value = "状态（0：停用，1：正常）")
     private Integer status;
-
-    /**
-     * 逻辑删除（0：未删除，1：已删除）
-     */
-    @ExcelProperty(value = "逻辑删除（0：未删除，1：已删除）")
-    private Integer deleted;
 
     /**
      * 创建时间

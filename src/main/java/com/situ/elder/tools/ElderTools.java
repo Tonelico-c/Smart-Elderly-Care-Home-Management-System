@@ -1,6 +1,7 @@
 package com.situ.elder.tools;
 
-import com.situ.elder.pojo.entity.Elder;
+import com.situ.elder.pojo.vo.ElderAiInfoVO;
+import com.situ.elder.pojo.vo.ElderInfoVO;
 import com.situ.elder.service.IElderService;
 import org.springframework.ai.tool.annotation.Tool;
 
@@ -29,12 +30,30 @@ public class ElderTools {
 
     /**
      * 查询当前老人自己的档案信息。
-     * 当用户问“我叫什么名字”“我今年多大”“我的手机号是多少”时，
+     * 当用户问"我叫什么名字""我今年多大""我的手机号是多少""我住哪个房间"时，
      * 模型会自动调用这个方法，而不是凭空编造答案。
      * 返回值会被序列化成 JSON 回传给模型。
+     * <p>
+     * 注意返回值类型：必须是字段白名单对象（ElderAiInfoVO），
+     * <b>不能直接返回 Elder 实体</b>——实体里的 password、idCardNo
+     * 会随着工具返回值一起被序列化并发给大模型。
      */
-    @Tool(description = "查询当前老人自己的档案信息，包括姓名、年龄、手机号、出生日期、家庭住址")
-    public Elder getElderInfo() {
-        return elderService.getById(elderId);
+    @Tool(description = "查询当前老人自己的档案信息，包括姓名、年龄、手机号、出生日期、家庭住址，以及所住楼栋、房间号和床位号")
+    public ElderAiInfoVO getElderInfo() {
+        ElderInfoVO info = elderService.getElderInfo(elderId.longValue());
+        if (info == null) {
+            return null;
+        }
+        //逐字段搬运，只把允许给模型看的字段放进去
+        ElderAiInfoVO vo = new ElderAiInfoVO();
+        vo.setName(info.getName());
+        vo.setAge(info.getAge());
+        vo.setPhone(info.getPhone());
+        vo.setBirthday(info.getBirthday());
+        vo.setAddress(info.getAddress());
+        vo.setBuildingName(info.getBuildingName());
+        vo.setRoomNo(info.getRoomNo());
+        vo.setBedNo(info.getBedNo());
+        return vo;
     }
 }

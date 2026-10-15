@@ -239,12 +239,31 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void checkout(Long id, String actualReturnTime) {
+        //管理后台调用，不校验归属（管理员可以给任意老人销假）
+        checkout(id, actualReturnTime, null);
+    }
+
+    /**
+     * 销假：请假记录、老人、入住记录、床位四张表在一个事务里同步恢复
+     * <p>
+     * 仅"请假中"（1）的记录可以销假；实际返回时间未填时取当前时间。
+     *
+     * @param id               请假记录id
+     * @param actualReturnTime 实际返回时间（yyyy-MM-dd HH:mm:ss，为空时取当前时间）
+     * @param elderId          当前登录老人id，非 null 时校验归属（App 端传，管理后台传 null）
+     * @throws ServiceException 记录不存在、状态不是请假中、不属于该老人或时间格式不正确时抛出
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void checkout(Long id, String actualReturnTime, Long elderId) {
         // 1. 校验记录存在且为"请假中"，防止重复销假
         ElderLeave elderLeave = getById(id);
         if (elderLeave == null || elderLeave.getStatus() == null || elderLeave.getStatus() != LEAVE_STATUS_ON_LEAVE) {
             throw new ServiceException("该记录不存在或不是请假中，不能销假");
         }
-        // 2. 解析实际返回时间,未填时取当前时间
+        // 2. 归属校验：App 端只能销自己的假
+        checkOwner(elderLeave, elderId);
+        // 3. 解析实际返回时间,未填时取当前时间
         Date actualReturn;
         try {
             actualReturn = ObjectUtils.isEmpty(actualReturnTime)
@@ -252,16 +271,16 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
         } catch (ParseException e) {
             throw new ServiceException("实际返回时间格式不正确");
         }
-        // 3. 更新请假记录:状态→已销假,写入实际返回时间
+        // 4. 更新请假记录:状态→已销假,写入实际返回时间
         elderLeave.setStatus(LEAVE_STATUS_CHECKED_OUT);
         elderLeave.setActualReturnTime(actualReturn);
         updateById(elderLeave);
-        // 4. 老人状态恢复为入住中
+        // 5. 老人状态恢复为入住中
         Elder elderUpdate = new Elder();
         elderUpdate.setId(elderLeave.getElderId());
         elderUpdate.setStatus(ELDER_STATUS_CHECKED_IN);
         elderMapper.updateById(elderUpdate);
-        // 5. 找到该老人"请假中"的入住记录:恢复为入住中,对应床位恢复为入住
+        // 6. 找到该老人"请假中"的入住记录:恢复为入住中,对应床位恢复为入住
         CheckInRecord checkInRecord = checkInRecordMapper.selectOne(new LambdaQueryWrapper<CheckInRecord>()
                 .eq(CheckInRecord::getElderId, elderLeave.getElderId())
                 .eq(CheckInRecord::getStatus, CHECKIN_STATUS_ON_LEAVE)
@@ -342,11 +361,37 @@ public class ElderLeaveServiceImpl extends ServiceImpl<ElderLeaveMapper, ElderLe
      */
     @Override
     public void cancel(Long id) {
+        //管理后台调用，不校验归属
+        cancel(id, null);
+    }
+
+    /**
+     * 取消请假（App 端专用，带归属校验）
+     *
+     * @param id      请假记录id
+     * @param elderId 当前登录老人id，非 null 时校验归属
+     * @throws ServiceException 记录不存在、已审批过或不属于该老人时抛出
+     */
+    @Override
+    public void cancel(Long id, Long elderId) {
         ElderLeave elderLeave = getById(id);
         if(elderLeave == null || elderLeave.getStatus() == null || elderLeave.getStatus() != LEAVE_STATUS_PENDING){
             throw new ServiceException("该记录不存在或已审批过，不能取消");
         }
+        checkOwner(elderLeave, elderId);
         elderLeaveMapper.deleteById(id);
+    }
+
+    /**
+     * 归属校验：elderId 不为 null 时，要求这条请假记录必须属于该老人。
+     * <p>
+     * 防止 App 端老人拿着自己的合法 token、只把路径上的 id 换掉就去操作别人的记录。
+     * 管理后台传 null 表示不校验（管理员本来就有权处理所有人的请假）。
+     */
+    private void checkOwner(ElderLeave elderLeave, Long elderId) {
+        if (elderId != null && !elderId.equals(elderLeave.getElderId())) {
+            throw new ServiceException("无权操作他人的请假记录");
+        }
     }
 
     /**

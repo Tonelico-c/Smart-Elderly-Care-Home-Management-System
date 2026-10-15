@@ -66,12 +66,14 @@ public class AppElderController {
         if (elder == null) {
             return Result.error("老人不存在");
         }
-        if (!elder.getPassword().equals(elderPasswordDTO.getOldPassword())) {
+        //库里存的是 BCrypt 哈希，不能拿哈希和明文直接 equals（BCrypt 每次加盐结果都不同，永远不相等）
+        if (!PasswordUtil.matches(elderPasswordDTO.getOldPassword(), elder.getPassword())) {
             return Result.error("原密码错误");
         }
         Elder newElder = new Elder();
         newElder.setId(elder.getId());
-        newElder.setPassword(elderPasswordDTO.getNewPassword());
+        //新密码必须加密后再入库，否则会把库里的 BCrypt 哈希覆盖成明文
+        newElder.setPassword(PasswordUtil.hash(elderPasswordDTO.getNewPassword()));
         elderService.updateById(newElder);
         return Result.ok("密码修改成功");
     }

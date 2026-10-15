@@ -3,18 +3,17 @@ package com.situ.elder.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.situ.elder.exception.ServiceException;
 import com.situ.elder.mapper.CareItemMapper;
 import com.situ.elder.mapper.CarePlanItemMapper;
 import com.situ.elder.mapper.CarePlanMapper;
-import com.situ.elder.mapper.CareTaskMapper;
 import com.situ.elder.pojo.entity.CareItem;
 import com.situ.elder.pojo.entity.CarePlan;
 import com.situ.elder.pojo.entity.CarePlanItem;
 import com.situ.elder.pojo.entity.CareTask;
 import com.situ.elder.pojo.query.CarePlanQuery;
 import com.situ.elder.service.ICarePlanService;
+import com.situ.elder.service.ICareTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,7 +53,7 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
     private CareItemMapper careItemMapper;
 
     @Autowired
-    private CareTaskMapper careTaskMapper;
+    private ICareTaskService careTaskService;
 
     @Override
     public IPage<CarePlan> list(CarePlanQuery carePlanQuery) {
@@ -101,6 +100,11 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
             carePlan.setItems(carePlanItemMapper.selectList(wrapper));
         }
         return carePlan;
+    }
+
+    @Override
+    public void refreshCarePlanStatus(Long id) {
+
     }
 
     private void saveItems(CarePlan carePlan) {
@@ -174,8 +178,7 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
             }
         }
         if (!tasks.isEmpty()) {
-            // 使用 Db 工具类批量保存，避免注入 ICareTaskService 造成循环依赖
-            Db.saveBatch(tasks);
+            careTaskService.saveBatch(tasks);
         }
     }
 
@@ -199,28 +202,5 @@ public class CarePlanServiceImpl extends ServiceImpl<CarePlanMapper, CarePlan> i
             }
         }
         return dates;
-    }
-
-    // 根据该护理计划生成的护理任务的完成状态，更新护理计划的完成状态
-    @Override
-    public void refreshCarePlanStatus(Long id) {
-        if(id == null){
-            return;
-        }
-        CarePlan carePlan = carePlanMapper.selectById(id);
-        if(carePlan == null){
-            return;
-        }
-        Long taskCount = careTaskMapper.selectCount(new LambdaQueryWrapper<CareTask>()
-                .eq(CareTask::getCarePlanId, id));
-        Long overTaskCount = careTaskMapper.selectCount(new LambdaQueryWrapper<CareTask>()
-                .eq(CareTask::getCarePlanId, id)
-                .eq(CareTask::getStatus, 1));
-        if(Objects.equals(taskCount, overTaskCount)){
-            carePlan.setStatus(0);
-        }else{
-            carePlan.setStatus(1);
-        }
-        carePlanMapper.updateById(carePlan);
     }
 }
